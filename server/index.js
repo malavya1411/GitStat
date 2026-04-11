@@ -22,7 +22,8 @@ const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
   'https://git-stat-olive.vercel.app',
-  process.env.FRONTEND_URL,
+  'https://git-stat-60itaasdq-malavya1411s-projects.vercel.app',
+  process.env.FRONTEND_URL
 ].filter(Boolean);
 
 try {
@@ -46,18 +47,24 @@ try {
 
 app.use(cors({
   origin: (origin, callback) => {
-    if (!origin && process.env.NODE_ENV !== 'production') {
-      return callback(null, true);
-    }
-    if (allowedOrigins.includes(origin)) {
-      return callback(null, true);
-    }
-    callback(new Error('CORS policy violation — origin not allowed'));
+    if (!origin) return callback(null, true)
+    if (allowedOrigins.includes(origin)) return callback(null, true)
+    console.error(`CORS blocked: ${origin}`)
+    callback(new Error('CORS policy violation — origin not allowed'))
   },
   credentials: true,
-  methods: ['GET', 'POST'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-}));
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
+  exposedHeaders: ['set-cookie']
+}))
+
+app.options('*', cors())
+
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', req.headers.origin || '*')
+  res.header('Access-Control-Allow-Credentials', 'true')
+  next()
+})
 
 app.use(express.json());
 app.use(cookieParser());
