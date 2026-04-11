@@ -101,31 +101,59 @@ const OverviewPage = () => {
     data.filter(c => c.health_score < 50).slice(0, 5), [data]);
 
   // Activity heatmap: 12 weeks × 7 days (simulated from weekly_commits)
-  const heatmapData = useMemo(() => {
-    const grid = Array.from({ length: 7 }, () => Array(12).fill(0));
+  const [heatmapData, maxHeat, monthLabels] = useMemo(() => {
+    const grid = Array.from({ length: 7 }, () => Array(12).fill({ count: 0, date: null }));
+    const months = [];
+    
+    // First map actual dates to grid cells
+    const today = new Date();
+    const currentDay = today.getDay(); // 0 is Sunday
+    
+    for (let w = 0; w < 12; w++) {
+      const weekSunday = new Date(today);
+      weekSunday.setDate(today.getDate() - currentDay - (11 - w) * 7);
+      
+      // If it's the first week, or the month changes from the previous week's Sunday
+      if (w === 0) {
+        months.push({ weekIdx: w, label: weekSunday.toLocaleDateString('en-US', { month: 'short' }) });
+      } else {
+        const prevWeekSunday = new Date(weekSunday);
+        prevWeekSunday.setDate(weekSunday.getDate() - 7);
+        if (weekSunday.getMonth() !== prevWeekSunday.getMonth()) {
+          months.push({ weekIdx: w, label: weekSunday.toLocaleDateString('en-US', { month: 'short' }) });
+        }
+      }
+
+      for (let d = 0; d < 7; d++) {
+        const cellDate = new Date(weekSunday);
+        cellDate.setDate(weekSunday.getDate() + d);
+        // Need to create new object references to avoid filling the same ref naturally
+        grid[d][w] = { count: 0, date: cellDate };
+      }
+    }
+
+    let maxC = 1;
     data.forEach(c => {
       c.weekly_commits.forEach((commits, weekIdx) => {
         const dayDist = [0.2, 0.18, 0.17, 0.16, 0.15, 0.08, 0.06];
         dayDist.forEach((frac, day) => {
-          grid[day][weekIdx] += Math.round(commits * frac);
+          grid[day][weekIdx].count += Math.round(commits * frac);
+          if (grid[day][weekIdx].count > maxC) maxC = grid[day][weekIdx].count;
         });
       });
     });
-    return grid;
+    return [grid, maxC, months];
   }, [data]);
 
-  const maxHeat = useMemo(() => Math.max(...heatmapData.flat(), 1), [heatmapData]);
-
-  const weekLabels = useMemo(() => {
-    return Array.from({ length: 12 }, (_, i) => {
-      const d = new Date();
-      // Set to the most recent Sunday
-      d.setDate(d.getDate() - d.getDay());
-      // Go back (11 - i) weeks
-      d.setDate(d.getDate() - (11 - i) * 7);
-      return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-    });
-  }, []);
+  const getOrdinalSuffix = (n) => {
+    if (n >= 11 && n <= 13) return 'th';
+    switch (n % 10) {
+      case 1:  return 'st';
+      case 2:  return 'nd';
+      case 3:  return 'rd';
+      default: return 'th';
+    }
+  };
 
   const barChartData = {
     labels: ['At Risk (0-40)', 'Stressed (41-65)', 'Healthy (66-85)', 'Thriving (86-100)'],
@@ -330,29 +358,46 @@ const OverviewPage = () => {
           <div className="rounded-xl p-6" style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}>
             <div className="font-mono-gs text-[10px] uppercase tracking-widest mb-1" style={{ color: 'var(--gs-text-muted)' }}>Activity Heatmap</div>
             <div className="font-bold text-xl mb-5" style={{ fontFamily: "'Geist Sans', sans-serif", color: 'var(--gs-text)' }}>12-Week Commit Density</div>
+            
+            {/* Month Header Row */}
+            <div className="flex gap-2 mb-1">
+              <div style={{ width: 24 }} className="mr-1 shrink-0" />
+              <div className="flex gap-1 flex-1">
+                 {Array.from({length: 12}).map((_, w) => {
+                   const m = monthLabels.find(x => x.weekIdx === w);
+                   return (
+                     <div key={w} className="flex-1 relative h-3">
+                        {m && <span className="font-mono-gs text-[10px] absolute bottom-0 left-0" style={{ color: 'var(--gs-text-muted)' }}>{m.label}</span>}
+                     </div>
+                   );
+                 })}
+              </div>
+            </div>
+
             <div className="flex gap-2">
               {/* Day labels */}
               <div className="flex flex-col gap-1 justify-around mr-1">
-                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map(d => (
-                  <span key={d} className="font-mono-gs text-[9px] leading-none" style={{ color: 'var(--gs-text-muted)', width: 24 }}>{d}</span>
+                {['Sun','Mon','Tue','Wed','Thu','Fri','Sat'].map((d, i) => (
+                  <span key={d} className="font-mono-gs text-[9px] leading-none text-right" style={{ color: 'var(--gs-text-muted)', width: 24, visibility: i % 2 === 1 ? 'visible' : 'hidden' }}>{d}</span>
                 ))}
               </div>
               {/* Grid */}
               <div className="flex gap-1 flex-1">
                 {Array.from({length:12}, (_,weekIdx) => (
                   <div key={weekIdx} className="flex flex-col gap-1 flex-1">
-                    <span className="font-mono-gs text-[8px] leading-none text-center mb-1 truncate" style={{ color: 'var(--gs-text-2)' }}>
-                      {weekLabels[weekIdx]}
-                    </span>
                     {heatmapData.map((dayRow, dayIdx) => {
-                      const v = dayRow[weekIdx];
-                      const intensity = v / maxHeat;
+                      const cell = dayRow[weekIdx];
+                      const intensity = cell.count / maxHeat;
                       const bg = intensity === 0
-                        ? 'var(--gs-surface)'
-                        : `rgba(46,160,67,${Math.max(0.15, intensity)})`;
+                        ? 'var(--gs-border-subtle)'
+                        : `rgba(46,160,67,${Math.max(0.2, intensity)})`;
+                      
+                      const hoverDate = cell.date;
+                      const tooltip = `${cell.count === 0 ? 'No' : cell.count} contribution${cell.count === 1 ? '' : 's'} on ${hoverDate.toLocaleDateString('en-US', { month: 'long' })} ${hoverDate.getDate()}${getOrdinalSuffix(hoverDate.getDate())}.`;
+
                       return (
-                        <div key={dayIdx} title={`${v} commits`}
-                          className="rounded-sm"
+                        <div key={dayIdx} title={tooltip}
+                          className="rounded-sm cursor-crosshair transition-transform hover:scale-125 hover:z-10 hover:shadow-lg"
                           style={{ background: bg, height: 12, minWidth: 0 }} />
                       );
                     })}
@@ -364,7 +409,7 @@ const OverviewPage = () => {
               <span className="font-mono-gs text-[10px]" style={{ color: 'var(--gs-text-muted)' }}>Less</span>
               {[0, 0.25, 0.5, 0.75, 1].map(i => (
                 <div key={i} className="w-3 h-3 rounded-sm"
-                  style={{ background: i === 0 ? 'var(--gs-surface)' : `rgba(46,160,67,${i})` }} />
+                  style={{ background: i === 0 ? 'var(--gs-border-subtle)' : `rgba(46,160,67,${Math.max(0.2, i)})` }} />
               ))}
               <span className="font-mono-gs text-[10px]" style={{ color: 'var(--gs-text-muted)' }}>More</span>
             </div>
