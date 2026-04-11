@@ -110,9 +110,6 @@ const SkeletonCard = () => (
 
 const RepoAnalysis = () => {
   const { owner, repo } = useParams();
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
-  const { theme, toggleTheme } = useTheme();
 
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState([]);
@@ -143,7 +140,7 @@ const RepoAnalysis = () => {
           const total = res.data.heatmap.length;
           setBusRiskPct(total > 0 ? Math.round((high / total) * 100) : 0);
         }
-      } catch {}
+      } catch (err) { /* ignore error */ }
     };
 
     fetchData();

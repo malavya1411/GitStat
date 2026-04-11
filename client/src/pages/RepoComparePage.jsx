@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useRef } from 'react';
+import React, {  useEffect, useState, useRef } from 'react';
 import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import RepoLayout from '../components/RepoLayout';
@@ -125,7 +125,7 @@ const RepoComparePage = () => {
     try {
       const r = await getCachedAnalysis(targetOwner, targetRepo, `${API_BASE_URL}/api/repo/${targetOwner}/${targetRepo}/analyze`);
       setCompareData(calculateRepoMetrics(r.data));
-    } catch (err) {
+    } catch {
       setCompareError('Failed to analyze repository. It might be too large or private.');
     } finally {
       setCompareLoading(false);

@@ -93,7 +93,7 @@ const DeploymentsPage = () => {
           <div className="text-center py-16 font-mono-gs text-sm" style={{ color: 'var(--gs-text-2)' }}>No deployments found for this repository.</div>
         ) : (
           <div className="space-y-6 relative before:absolute before:inset-0 before:ml-6 before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-[var(--gs-border)] before:to-transparent pt-4">
-            {deployments.map((dep, idx) => {
+            {deployments.map(dep => {
               const { color, bg, border } = statusStyle(dep.status);
               return (
                 <div key={dep.id} className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">

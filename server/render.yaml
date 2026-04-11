@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: gitstat-api
+    env: node
+    buildCommand: npm install
+    startCommand: node index.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GITHUB_CLIENT_ID
+        sync: false
+      - key: GITHUB_CLIENT_SECRET
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GITHUB_REDIRECT_URI
+        sync: false
+      - key: FRONTEND_URL
+        sync: false
