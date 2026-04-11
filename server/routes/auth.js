@@ -54,8 +54,8 @@ router.get('/callback', async (req, res) => {
 
     res.cookie('session_id', sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: SESSION_MAX_AGE_MS,
     });
 
