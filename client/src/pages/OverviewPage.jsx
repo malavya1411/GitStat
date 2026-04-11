@@ -6,6 +6,7 @@ import {
 import { Bar } from 'react-chartjs-2';
 import { getCachedAnalysis } from '../utils/apiCache';
 import RepoLayout from '../components/RepoLayout';
+import DeepInsights from '../components/Architecture/DeepInsights';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -368,6 +369,9 @@ const OverviewPage = () => {
               <span className="font-mono-gs text-[10px]" style={{ color: 'var(--gs-text-muted)' }}>More</span>
             </div>
           </div>
+
+          {/* Deep Insights */}
+          <DeepInsights owner={owner} repo={repo} />
         </div>
       )}
     </RepoLayout>
