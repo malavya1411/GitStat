@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import axios from 'axios';
 
 const AuthContext = createContext();
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 const GITHUB_REDIRECT_URI = import.meta.env.VITE_GITHUB_REDIRECT_URI || `${API_BASE_URL}/auth/callback`;
 
 export const useAuth = () => useContext(AuthContext);
@@ -31,12 +31,9 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   const loginWithGithub = () => {
-    const params = new URLSearchParams({
-      client_id: import.meta.env.VITE_GITHUB_CLIENT_ID,
-      scope: 'repo,read:user',
-      redirect_uri: GITHUB_REDIRECT_URI,
-    });
-    window.location.href = `https://github.com/login/oauth/authorize?${params.toString()}`;
+    const apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+    const clientId = import.meta.env.VITE_GITHUB_CLIENT_ID;
+    window.location.href = `https://github.com/login/oauth/authorize?client_id=${clientId}&scope=repo,read:user&redirect_uri=${apiUrl}/auth/callback`;
   };
 
   const logout = () => {

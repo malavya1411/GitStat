@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import axios from 'axios';
 import RepoLayout from '../components/RepoLayout';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 const statusStyle = (s) => {
   if (s === 'success') return { color: 'var(--gs-green)',  bg: 'rgba(46,160,67,0.12)',   border: 'rgba(46,160,67,0.4)' };

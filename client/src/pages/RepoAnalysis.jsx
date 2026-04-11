@@ -9,7 +9,7 @@ import ContributorCard from '../components/ContributorCard';
 import ChartDrawer from '../components/ChartDrawer';
 import { computeTimeMachineStats, predictBurnout } from '../utils/metrics';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 /* ── Helper: clamp ── */
 const clamp = (v, min, max) => Math.min(max, Math.max(min, v));

@@ -10,7 +10,7 @@ import DeepInsights from '../components/Architecture/DeepInsights';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 const getHealthColor = (score) => {
   if (score <= 40) return 'var(--gs-red)';

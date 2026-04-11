@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { Flame, Sparkles, AlertTriangle, RotateCcw } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 const LargeRepoBanner = ({ sampledCount, totalEstimate }) => (
   <div className="flex items-start gap-2 px-4 py-2.5 rounded-lg mb-4 text-[12px] font-mono-gs"

@@ -7,7 +7,7 @@ import axios from 'axios';
 import { detectTechStack } from '../utils/detectTechStack';
 import { buildTreeStructure, getComplexity } from '../utils/buildTreeStructure';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
 export function useRepoArchitecture(owner, repo) {
   const [state, setState] = useState({
