@@ -239,50 +239,6 @@ const Dashboard = () => {
           Search any public GitHub repository to analyze contributor health, burnout risk, and knowledge concentration.
         </p>
 
-        <div className="w-full max-w-4xl mb-4 relative z-20">
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-4">
-            <div className="w-full flex-1">
-              <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
-                {FILTER_GROUPS.map((group) => (
-                  <div key={group.label} className="flex flex-col gap-2">
-                    <span className="text-[11px] uppercase tracking-widest text-[var(--gs-text-muted)] font-mono-gs">{group.label}</span>
-                    <div className="flex flex-wrap items-center gap-2">
-                      {group.items.map(item => {
-                        const isActive = activeFilters.includes(item);
-                        return (
-                          <button
-                            key={item}
-                            onClick={() => toggleFilter(item)}
-                            className={`px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
-                              isActive 
-                                ? 'bg-[var(--gs-green)] text-black border-[var(--gs-green)] border' 
-                                : 'bg-transparent border border-[var(--gs-border)] text-[var(--gs-text-secondary)] hover:border-[var(--gs-text-secondary)]'
-                            }`}
-                          >
-                            {item}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-            {hasSearched && sortedResults.length > 0 && (
-              <div className="flex flex-col shrink-0">
-                <span className="text-[11px] uppercase tracking-widest text-[var(--gs-text-muted)] font-mono-gs mb-2">Sort By</span>
-                <select 
-                  value={sortOption} 
-                  onChange={(e) => setSortOption(e.target.value)}
-                  className="bg-[var(--gs-surface)] border border-[var(--gs-border)] text-sm rounded-lg px-3 py-1.5 outline-none font-mono-gs text-[var(--gs-text-secondary)]"
-                >
-                  {SORT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-            )}
-          </div>
-        </div>
-
         <div ref={searchContainerRef} className="w-full max-w-4xl mb-12 relative z-30">
           <form onSubmit={handleSearchSubmit}>
             <div className="flex items-center p-4 rounded-xl shadow-2xl transition-all duration-300" style={{ background: 'var(--gs-surface)', border: `1px solid ${activeFilters.length > 0 ? 'var(--gs-green)' : 'var(--gs-border)'}` }}>
@@ -299,11 +255,60 @@ const Dashboard = () => {
                 style={{ color: 'var(--gs-text)', fontFamily: "'JetBrains Mono', monospace" }}
                 autoComplete="off" spellCheck="false" 
               />
-              <div className="shrink-0 flex items-center gap-1.5 px-3 py-1 rounded ml-2" style={{ background: 'var(--gs-surface-high)', border: '1px solid var(--gs-border)' }}>
-                <span className="font-mono-gs text-[10px] uppercase tracking-tighter" style={{ color: 'var(--gs-text-2)' }}>Enter</span>
-              </div>
+              <button 
+                type="button"
+                onClick={() => setShowMobileFilters(!showMobileFilters)} 
+                className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded ml-2 transition-all ${activeFilters.length > 0 ? 'bg-[var(--gs-green)] text-black' : 'bg-[var(--gs-surface-high)] text-[var(--gs-text-2)] hover:text-[var(--gs-text)]'}`}
+                style={{ border: activeFilters.length > 0 ? '1px solid var(--gs-green)' : '1px solid var(--gs-border)' }}>
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/></svg>
+                <span className="font-mono-gs text-[10px] uppercase font-bold tracking-tighter">Filters {activeFilters.length > 0 && `(${activeFilters.length})`}</span>
+              </button>
             </div>
           </form>
+
+          {showMobileFilters && (
+            <div className="absolute top-full left-0 right-0 mt-2 p-6 rounded-xl shadow-2xl z-40 border animate-in fade-in slide-in-from-top-2" style={{ background: 'var(--gs-surface)', borderColor: 'var(--gs-border)' }}>
+              <div className="flex flex-col gap-6">
+                <div className="flex flex-wrap items-start gap-x-8 gap-y-6">
+                  {FILTER_GROUPS.map((group) => (
+                    <div key={group.label} className="flex flex-col gap-2 flex-1 min-w-[150px]">
+                      <span className="text-[11px] uppercase tracking-widest text-[var(--gs-text-muted)] font-mono-gs block mb-1">{group.label}</span>
+                      <div className="flex flex-wrap items-center gap-2">
+                        {group.items.map(item => {
+                          const isActive = activeFilters.includes(item);
+                          return (
+                            <button
+                              key={item}
+                              onClick={() => toggleFilter(item)}
+                              className={`px-3 py-1.5 rounded-full text-[10px] font-medium transition-all ${
+                                isActive 
+                                  ? 'bg-[var(--gs-green)] text-black border-[var(--gs-green)] border' 
+                                  : 'bg-transparent border border-[var(--gs-border)] text-[var(--gs-text-secondary)] hover:border-[var(--gs-text-secondary)]'
+                              }`}
+                            >
+                              {item}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                {hasSearched && sortedResults.length > 0 && (
+                  <div className="flex items-center gap-4 pt-4 border-t" style={{ borderColor: 'var(--gs-border)' }}>
+                    <span className="text-[11px] uppercase tracking-widest text-[var(--gs-text-muted)] font-mono-gs shrink-0">Sort By</span>
+                    <select 
+                      value={sortOption} 
+                      onChange={(e) => setSortOption(e.target.value)}
+                      className="bg-[var(--gs-surface-high)] border border-[var(--gs-border)] text-sm rounded-lg px-3 py-1.5 outline-none font-mono-gs text-[var(--gs-text-secondary)]"
+                    >
+                      {SORT_OPTIONS.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+                    </select>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="w-full max-w-4xl z-10 transition-all">
