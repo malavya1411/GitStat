@@ -46,19 +46,16 @@ try {
 }
 
 app.use(cors({
-  origin: (origin, callback) => {
-    if (!origin) return callback(null, true)
-    if (allowedOrigins.includes(origin)) return callback(null, true)
-    console.error(`CORS blocked: ${origin}`)
-    callback(new Error('CORS policy violation — origin not allowed'))
-  },
+  origin: [
+    'http://localhost:5173',
+    'http://localhost:5174',
+    'https://git-stat-olive.vercel.app',
+    'https://git-stat-60itaasdq-malavya1411s-projects.vercel.app'
+  ],
   credentials: true,
   methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie'],
-  exposedHeaders: ['set-cookie']
+  allowedHeaders: ['Content-Type', 'Authorization', 'Cookie']
 }))
-
-app.options('/(.*)', cors())
 
 app.use((req, res, next) => {
   res.header('Access-Control-Allow-Origin', req.headers.origin || '*')
