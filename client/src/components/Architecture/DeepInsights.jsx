@@ -1,33 +1,75 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Flame, Sparkles } from 'lucide-react';
+import { Flame, Sparkles, AlertTriangle, RotateCcw } from 'lucide-react';
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5001';
+
+const LargeRepoBanner = ({ sampledCount, totalEstimate }) => (
+  <div className="flex items-start gap-2 px-4 py-2.5 rounded-lg mb-4 text-[12px] font-mono-gs"
+    style={{ background: 'rgba(210,153,34,0.08)', border: '1px solid rgba(210,153,34,0.25)', color: 'var(--gs-amber)' }}>
+    <AlertTriangle size={13} className="shrink-0 mt-0.5" />
+    <span>
+      Large repository detected — showing analysis for the <strong>{sampledCount}</strong> most significant files.
+      Full analysis available for repositories under 500 files.
+    </span>
+  </div>
+);
+
+const TimeoutState = ({ onRetry }) => (
+  <div className="flex-1 flex flex-col items-center justify-center gap-3 py-8">
+    <AlertTriangle size={28} style={{ color: 'var(--gs-amber)' }} />
+    <p className="text-[13px] font-mono-gs text-center" style={{ color: 'var(--gs-text-2)' }}>
+      GitHub API took too long. Try a smaller repository.
+    </p>
+    <button onClick={onRetry}
+      className="flex items-center gap-2 px-4 py-2 rounded-lg text-[12px] font-bold transition-all hover:opacity-80 active:scale-95"
+      style={{ background: 'rgba(210,153,34,0.1)', border: '1px solid rgba(210,153,34,0.3)', color: 'var(--gs-amber)' }}>
+      <RotateCcw size={13} /> Retry
+    </button>
+  </div>
+);
 
 export default function DeepInsights({ owner, repo }) {
   const [busFactorData, setBusFactorData] = useState(null);
   const [busFactorLoading, setBusFactorLoading] = useState(true);
+  const [busFactorTimeout, setBusFactorTimeout] = useState(false);
   const [readmeScore, setReadmeScore] = useState(null);
   const [readmeLoading, setReadmeLoading] = useState(true);
+  const [readmeTimeout, setReadmeTimeout] = useState(false);
+  const [retryKey, setRetryKey] = useState(0);
 
   useEffect(() => {
+    setBusFactorLoading(true);
+    setBusFactorTimeout(false);
+    setBusFactorData(null);
     const fetchBusFactor = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/api/repo/${owner}/${repo}/bus-factor`, { withCredentials: true });
-        setBusFactorData(res.data);
-      } catch (err) {} finally { setBusFactorLoading(false); }
+        if (res.data?.error === 'timeout') { setBusFactorTimeout(true); }
+        else { setBusFactorData(res.data); }
+      } catch (err) {
+        if (err.response?.status === 408 || err.response?.data?.error === 'timeout') {
+          setBusFactorTimeout(true);
+        }
+      } finally { setBusFactorLoading(false); }
     };
     
+    setReadmeLoading(true);
+    setReadmeTimeout(false);
+    setReadmeScore(null);
     const fetchReadme = async () => {
       try {
         const res = await axios.get(`${API_BASE_URL}/api/repo/${owner}/${repo}/readme-score`, { withCredentials: true });
-        setReadmeScore(res.data);
-      } catch (err) {} finally { setReadmeLoading(false); }
+        if (res.data?.error === 'timeout') { setReadmeTimeout(true); }
+        else { setReadmeScore(res.data); }
+      } catch (err) {
+        if (err.response?.status === 408) setReadmeTimeout(true);
+      } finally { setReadmeLoading(false); }
     };
 
     fetchBusFactor();
     fetchReadme();
-  }, [owner, repo]);
+  }, [owner, repo, retryKey]);
 
   return (
     <div className="grid grid-cols-1 gap-6 mt-12 mb-12">
@@ -49,14 +91,19 @@ export default function DeepInsights({ owner, repo }) {
              <div className="skeleton h-10 w-32 rounded" />
              <div className="skeleton flex-1 rounded" />
            </div>
+        ) : busFactorTimeout ? (
+           <TimeoutState onRetry={() => setRetryKey(k => k + 1)} />
         ) : busFactorData ? (
            <div className="flex-1 flex flex-col">
-             <div className="flex gap-4 items-end mb-6">
+             <div className="flex gap-4 items-end mb-4">
                <div className="text-4xl font-black font-mono-gs" style={{color: busFactorData.bus_factor_score > 70 ? 'var(--gs-green)' : busFactorData.bus_factor_score > 40 ? 'var(--gs-amber)' : 'var(--gs-red)'}}>
                   {busFactorData.bus_factor_score}
                </div>
                <div className="text-[11px] uppercase tracking-widest text-[var(--gs-text-muted)] p-1">Health Score</div>
              </div>
+             {busFactorData.truncated && (
+               <LargeRepoBanner sampledCount={busFactorData.sampledCount} totalEstimate={busFactorData.sampledCount} />
+             )}
              <div className="flex flex-wrap gap-2 custom-scrollbar overflow-y-visible pr-2 max-h-[400px]">
                {busFactorData.heatmap.map((file, i) => (
                  <div key={i} className="group relative w-10 h-10 rounded-md flex items-center justify-center cursor-crosshair transition-transform hover:scale-125 hover:z-50" 
@@ -94,6 +141,8 @@ export default function DeepInsights({ owner, repo }) {
                <div className="skeleton h-8 w-full rounded" />
                <div className="skeleton flex-1 mt-4 rounded" />
             </div>
+         ) : readmeTimeout ? (
+            <TimeoutState onRetry={() => setRetryKey(k => k + 1)} />
          ) : readmeScore ? (
             <div className="flex-1 flex flex-col gap-6">
               <div>

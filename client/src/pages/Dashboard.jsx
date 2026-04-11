@@ -175,8 +175,8 @@ const Dashboard = () => {
           style={{ fontFamily: "'Geist Sans', sans-serif" }}>
           Repository Explorer
         </h1>
-        <p className="font-mono-gs text-xs uppercase tracking-widest mb-10 text-center" style={{ color: 'var(--gs-text-2)' }}>
-          Global Registry · Sovereign Console v2.4
+        <p className="font-mono-gs text-xs mb-10 text-center max-w-xl" style={{ color: 'var(--gs-text-2)' }}>
+          Search any public GitHub repository to analyze contributor health, burnout risk, and knowledge concentration.
         </p>
 
         {/* Search with autocomplete */}

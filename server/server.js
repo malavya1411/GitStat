@@ -30,6 +30,25 @@ const GITHUB_CLIENT_SECRET = process.env.GITHUB_CLIENT_SECRET;
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+// Abort-controller wrapper — rejects after timeoutMs with a structured error
+async function fetchWithTimeout(url, config, timeoutMs = 8000) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const response = await axios.get(url, { ...config, signal: controller.signal });
+    return response;
+  } catch (err) {
+    if (err.code === 'ERR_CANCELED' || err.name === 'AbortError' || (err.message && err.message.includes('abort'))) {
+      const timeoutErr = new Error('GitHub API took too long. Try a smaller repository.');
+      timeoutErr.isTimeout = true;
+      throw timeoutErr;
+    }
+    throw err;
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 function createWeeklyBuckets() {
   return Array.from({ length: 12 }, () => ({ c: 0 }));
 }
@@ -523,19 +542,44 @@ app.get('/api/repo-info/:owner/:repo', async (req, res) => {
   }
 });
 
-// Full recursive file tree via git trees API
+// Full recursive file tree via git trees API — with large-repo protection
 app.get('/api/repo-tree/:owner/:repo', async (req, res) => {
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'Not logged in' });
   const { owner, repo } = req.params;
   const branch = req.query.branch || 'HEAD';
+  const config = getGithubConfig(session.accessToken);
   try {
-    const r = await axios.get(
-      `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
-      getGithubConfig(session.accessToken)
-    );
-    // Return truncated-flag + tree array
-    res.json({ tree: r.data.tree || [], truncated: r.data.truncated || false });
+    let r;
+    try {
+      r = await fetchWithTimeout(
+        `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
+        config,
+        8000
+      );
+    } catch (timeoutErr) {
+      if (timeoutErr.isTimeout) {
+        return res.status(408).json({ error: 'timeout', message: timeoutErr.message });
+      }
+      throw timeoutErr;
+    }
+
+    const rawTree = r.data.tree || [];
+    const githubTruncated = r.data.truncated || false;
+    const MAX_ITEMS = 500;
+
+    // Large repo guard: cap at MAX_ITEMS blobs
+    if (githubTruncated || rawTree.length > MAX_ITEMS) {
+      const blobs = rawTree.filter(n => n.type === 'blob').slice(0, MAX_ITEMS);
+      return res.json({
+        tree: blobs,
+        truncated: true,
+        sampledCount: blobs.length,
+        totalEstimate: rawTree.length || '500+',
+      });
+    }
+
+    res.json({ tree: rawTree, truncated: false });
   } catch (err) {
     res.status(err.response?.status || 500).json({ error: 'Failed to fetch repo tree' });
   }
@@ -622,7 +666,7 @@ app.get('/api/repo/:owner/:repo/readme-score', async (req, res) => {
   }
 });
 
-// Bus Factor Heatmap
+// Bus Factor Heatmap — with large-repo protection
 app.get('/api/repo/:owner/:repo/bus-factor', async (req, res) => {
   const session = getSession(req);
   if (!session) return res.status(401).json({ error: 'Not logged in' });
@@ -630,47 +674,66 @@ app.get('/api/repo/:owner/:repo/bus-factor', async (req, res) => {
   const config = getGithubConfig(session.accessToken);
   
   try {
-    const repoInfo = await axios.get(`https://api.github.com/repos/${owner}/${repo}`, config);
+    const repoInfo = await fetchWithTimeout(`https://api.github.com/repos/${owner}/${repo}`, config, 8000)
+      .catch(err => { if (err.isTimeout) throw err; throw err; });
     const defaultBranch = repoInfo.data.default_branch;
     
-    const treeRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}/git/trees/${defaultBranch}?recursive=1`, config);
-    
-    // Filter to code files roughly and limit to 40 max to avoid hitting GitHub API limits too hard
-    const blobs = treeRes.data.tree.filter(t => t.type === 'blob');
-    const filesToAnalyze = blobs.slice(0, 40);
+    let treeRes;
+    try {
+      treeRes = await fetchWithTimeout(
+        `https://api.github.com/repos/${owner}/${repo}/git/trees/${defaultBranch}?recursive=1`,
+        config,
+        8000
+      );
+    } catch (err) {
+      if (err.isTimeout) {
+        return res.status(408).json({ error: 'timeout', message: err.message });
+      }
+      throw err;
+    }
+
+    const rawTree = treeRes.data.tree || [];
+    // Large-repo guard: take at most 40 blobs
+    const blobs = rawTree.filter(t => t.type === 'blob').slice(0, 40);
+    const isTruncated = treeRes.data.truncated || rawTree.length > 500;
     
     let totalFilesAnalyzed = 0;
     let singleContributorFiles = 0;
     const heatmap = [];
 
-    // process sequentially to avoid triggering abuse mechanisms
-    for (let f of filesToAnalyze) {
+    // Sequential to avoid abuse rate limits
+    for (let f of blobs) {
       try {
-        const commitsRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}/commits?path=${f.path}&per_page=10`, config);
+        const commitsRes = await fetchWithTimeout(
+          `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(f.path)}&per_page=10`,
+          config,
+          8000
+        );
         const uniqueAuthors = new Set();
         for (let c of commitsRes.data) {
            if (c.author && c.author.login) uniqueAuthors.add(c.author.login);
            else if (c.commit && c.commit.author) uniqueAuthors.add(c.commit.author.name);
         }
-        
         const count = uniqueAuthors.size;
         totalFilesAnalyzed++;
         if (count === 1) singleContributorFiles++;
-        
         heatmap.push({
            path: f.path,
            unique_contributors: count,
            risk: count === 1 ? 'high' : (count === 2 ? 'medium' : 'low')
         });
-      } catch (err) {
-        // ignore individual file errors
+      } catch (fileErr) {
+        if (fileErr.isTimeout) break; // stop if we're being slow
       }
     }
 
     const bus_factor_score = totalFilesAnalyzed === 0 ? 100 : Math.round(((totalFilesAnalyzed - singleContributorFiles) / totalFilesAnalyzed) * 100);
     
-    res.json({ bus_factor_score, heatmap });
+    res.json({ bus_factor_score, heatmap, truncated: isTruncated, sampledCount: blobs.length });
   } catch (error) {
+    if (error.isTimeout) {
+      return res.status(408).json({ error: 'timeout', message: error.message });
+    }
     console.error('Bus Factor Error:', error.message);
     res.status(500).json({ error: 'Failed to calculate bus factor' });
   }

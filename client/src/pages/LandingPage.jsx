@@ -315,7 +315,7 @@ const LandingPage = () => {
           </h1>
 
           <p className="mt-6 max-w-[420px] text-base leading-relaxed text-white/52 lg:text-[1.05rem]">
-            Elite analytics for engineering leaders. Monitor contributor health, velocity, and alignment through a sovereign technical lens.
+            GitStat detects contributor burnout before maintainers notice. Real data, no guessing.
           </p>
 
           <div className="mt-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center">

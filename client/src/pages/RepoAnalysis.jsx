@@ -121,7 +121,7 @@ const RepoAnalysis = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [copied, setCopied] = useState(false);
   const [timeOffset, setTimeOffset] = useState(0);
-
+  const [busRiskPct, setBusRiskPct] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -134,12 +134,20 @@ const RepoAnalysis = () => {
         setLoading(false);
       }
     };
-    
 
-    
-
+    const fetchBusRisk = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/repo/${owner}/${repo}/bus-factor`, { withCredentials: true });
+        if (res.data?.heatmap) {
+          const high = res.data.heatmap.filter(f => f.risk === 'high').length;
+          const total = res.data.heatmap.length;
+          setBusRiskPct(total > 0 ? Math.round((high / total) * 100) : 0);
+        }
+      } catch {}
+    };
 
     fetchData();
+    fetchBusRisk();
   }, [owner, repo]);
 
   const enrichedData = useMemo(() => {
@@ -290,24 +298,41 @@ const RepoAnalysis = () => {
             {/* KPI row */}
             <div className="flex flex-wrap gap-6 mt-6">
               {[
-                { label: 'Contributors', value: filteredContributors.length },
-                { label: 'Avg Health', value: summary.averageHealth },
-                { label: 'Total Commits', value: formatShortValue(summary.totalCommits) },
-                { label: 'Total PRs', value: summary.totalPRs },
-                { label: 'Trend', value: `${summary.trendDelta >= 0 ? '+' : ''}${summary.trendDelta}%` },
-              ].map(({ label, value }) => (
+                { label: 'Contributors', value: filteredContributors.length, color: null },
+                { label: 'Avg Health', value: summary.averageHealth, color: null },
+                { label: 'Total Commits', value: formatShortValue(summary.totalCommits), color: null },
+                { label: 'Total PRs', value: summary.totalPRs, color: null },
+                { label: 'Trend', value: `${summary.trendDelta >= 0 ? '+' : ''}${summary.trendDelta}%`, color: null },
+              ].map(({ label, value, color }) => (
                 <div key={label}>
                   <div className="font-mono-gs text-[10px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--gs-text-muted)' }}>
                     {label}
                   </div>
                   <div
                     className="font-mono-gs text-xl font-bold"
-                    style={{ color: 'var(--gs-text)', fontFamily: "'JetBrains Mono', monospace" }}
+                    style={{ color: color || 'var(--gs-text)', fontFamily: "'JetBrains Mono', monospace" }}
                   >
                     {value}
                   </div>
                 </div>
               ))}
+              {/* Bus Risk — computed from bus factor heatmap */}
+              {busRiskPct !== null && (
+                <div>
+                  <div className="font-mono-gs text-[10px] uppercase tracking-widest mb-0.5" style={{ color: 'var(--gs-text-muted)' }}>
+                    Bus Risk
+                  </div>
+                  <div
+                    className="font-mono-gs text-xl font-bold"
+                    style={{
+                      color: busRiskPct > 40 ? 'var(--gs-red)' : busRiskPct > 20 ? 'var(--gs-amber)' : 'var(--gs-green)',
+                      fontFamily: "'JetBrains Mono', monospace"
+                    }}
+                  >
+                    {busRiskPct}%
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Repo Health Time Machine Slider */}
