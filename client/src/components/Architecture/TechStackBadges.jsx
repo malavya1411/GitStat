@@ -6,9 +6,9 @@ function Badge({ item, delay = 0, isVisible }) {
     <div
       className="flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-500 whitespace-nowrap hover:scale-105 cursor-default select-none"
       style={{
-        background: item.bg,
-        color: item.color,
-        border: `1px solid ${item.color}33`,
+        background: isVisible ? item.bg : 'transparent',
+        color: isVisible ? item.color : 'transparent',
+        border: `1.5px solid ${item.color}${isVisible ? '99' : '00'}`,
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
         transitionDelay: `${delay}ms`,

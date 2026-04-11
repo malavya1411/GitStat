@@ -61,9 +61,9 @@ function CodeBlock({ code, language = 'bash' }) {
 
 function EnvVarRow({ varObj }) {
   return (
-    <div className="rounded-lg p-3 flex flex-col gap-1" style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.05)' }}>
+    <div className="rounded-lg p-3 flex flex-col gap-1" style={{ background: 'rgba(0,0,0,0.03)', border: '1px solid rgba(0,0,0,0.08)' }}>
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="font-mono-gs text-[12px] font-bold" style={{ color: '#f7df1e' }}>{varObj.key}</span>
+        <span className="font-mono-gs text-[12px] font-bold" style={{ color: 'var(--gs-amber)' }}>{varObj.key}</span>
         {varObj.description.service && (
           <span className="rounded-full px-2 py-0.5 text-[10px] font-bold" style={{ background: 'rgba(182,187,198,0.08)', color: '#7d8590' }}>
             {varObj.description.service}
@@ -85,12 +85,12 @@ function EnvVarRow({ varObj }) {
 }
 
 const STEP_COLORS = [
-  { num: '#bc8cff', bg: 'rgba(188,140,255,0.1)', border: 'rgba(188,140,255,0.2)' },
-  { num: '#58a6ff', bg: 'rgba(88,166,255,0.1)', border: 'rgba(88,166,255,0.2)' },
-  { num: '#2ea043', bg: 'rgba(46,160,67,0.1)', border: 'rgba(46,160,67,0.2)' },
-  { num: '#d29922', bg: 'rgba(210,153,34,0.1)', border: 'rgba(210,153,34,0.2)' },
-  { num: '#f78166', bg: 'rgba(247,129,102,0.1)', border: 'rgba(247,129,102,0.2)' },
-  { num: '#ec6547', bg: 'rgba(236,101,71,0.1)', border: 'rgba(236,101,71,0.2)' },
+  { num: 'var(--gs-purple)', bg: 'rgba(55,48,163,0.1)', border: 'rgba(55,48,163,0.2)' },
+  { num: 'var(--gs-primary)', bg: 'rgba(67,56,202,0.1)', border: 'rgba(67,56,202,0.2)' },
+  { num: 'var(--gs-green)', bg: 'rgba(6,95,70,0.1)', border: 'rgba(6,95,70,0.2)' },
+  { num: 'var(--gs-amber)', bg: 'rgba(120,53,15,0.1)', border: 'rgba(120,53,15,0.2)' },
+  { num: '#e11d48', bg: 'rgba(225,29,72,0.1)', border: 'rgba(225,29,72,0.2)' },
+  { num: '#ea580c', bg: 'rgba(234,88,12,0.1)', border: 'rgba(234,88,12,0.2)' },
 ];
 
 export default function SetupStep({ step, index, isVisible }) {
@@ -180,8 +180,8 @@ function ChecklistWidget({ items }) {
           onClick={() => toggle(i)}>
           <div className="w-4 h-4 rounded flex items-center justify-center mt-0.5 shrink-0 transition-all"
             style={{
-              background: checked.has(i) ? 'var(--gs-green)' : 'transparent',
-              border: `1.5px solid ${checked.has(i) ? 'var(--gs-green)' : 'var(--gs-border)'}`,
+              background: checked.has(i) ? 'var(--gs-green)' : 'rgba(0,0,0,0.05)',
+              border: `1.5px solid ${checked.has(i) ? 'var(--gs-green)' : 'var(--gs-text-muted)'}`,
             }}>
             {checked.has(i) && (
               <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="#000" strokeWidth="3.5">

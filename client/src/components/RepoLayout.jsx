@@ -62,10 +62,10 @@ const RepoLayout = ({ children, searchSlot }) => {
 
       {/* ── Navbar ── */}
       <header className="gs-navbar sticky top-0 z-50 w-full">
-        <div className="flex items-center justify-between px-6 h-16">
+        <div className="flex items-center justify-between pl-5 pr-6 h-16">
           <button type="button" onClick={() => navigate('/dashboard')}
-            className="text-xl font-bold tracking-tight transition-opacity hover:opacity-70"
-            style={{ fontFamily: isLight ? "'Newsreader', serif" : "'Geist Sans', sans-serif", color: 'var(--gs-text)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '-0.02em' }}>
+            className="text-2xl font-extrabold tracking-tight transition-opacity hover:opacity-70 p-0 m-0"
+            style={{ fontFamily: isLight ? "'Newsreader', serif" : "'Geist Sans', sans-serif", color: 'var(--gs-text)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '-0.03em' }}>
             GitStat
           </button>
           <div className="flex items-center gap-3">
@@ -99,12 +99,12 @@ const RepoLayout = ({ children, searchSlot }) => {
           }}>
 
           {/* Repo identity block */}
-          <div className="px-5 pt-8 pb-6">
-            <div className="font-bold text-[15px] leading-tight"
-              style={{ fontFamily: isLight ? "'Newsreader', serif" : "'Geist Sans', sans-serif", color: 'var(--gs-text)', letterSpacing: '-0.02em' }}>
+          <div className="px-5 pt-10 pb-6">
+            <div className="font-black text-[18px] leading-tight mb-1"
+              style={{ fontFamily: isLight ? "'Newsreader', serif" : "'Geist Sans', sans-serif", color: 'var(--gs-text)', letterSpacing: '-0.03em' }}>
               {repo || 'Console'}
             </div>
-            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--gs-text-muted)' }}>
+            <div className="text-[11px] font-bold uppercase tracking-[0.12em]" style={{ color: 'var(--gs-text-muted)', fontFamily: "'Manrope', sans-serif" }}>
               {owner || 'Sovereign v2.4'}
             </div>
           </div>

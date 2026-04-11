@@ -79,24 +79,24 @@ html.light {
   --gs-surface-high:    #dbdcc3;  /* surface_dim — deep tonal, sidebars */
 
   /* ── No-line system: boundaries defined by tone, not borders ── */
-  --gs-border:          rgba(199, 197, 204, 0.20); /* ghost border — felt, not seen */
-  --gs-border-subtle:   rgba(199, 197, 204, 0.12);
+  --gs-border:          rgba(27, 29, 14, 0.15); /* darker ghost border for light mode */
+  --gs-border-subtle:   rgba(27, 29, 14, 0.08);
 
   /* ── Typography — warm, never pure black ── */
-  --gs-text:            #1b1d0e;  /* on_background — warm near-black */
-  --gs-text-2:          #5c5d6e;  /* primary/secondary labels */
-  --gs-text-muted:      #8a8b7e;  /* tertiary labels */
+  --gs-text:            #0a0b06;  /* clinical rich black */
+  --gs-text-2:          #30313d;  /* structural secondary */
+  --gs-text-muted:      #5b5c4d;  /* legible tertiary */
 
-  /* ── Data-viz accent colors — unchanged for bus factor/health ── */
-  --gs-green:           #1a7f37;  /* healthy / well-distributed */
-  --gs-red:             #cf222e;  /* at-risk / single contributor */
-  --gs-amber:           #9a6700;  /* medium risk / stressed */
-  --gs-purple:          #5c5d6e;  /* primary lavender for accents */
+  /* ── Data-viz accent colors — more vibrant ── */
+  --gs-green:           #065f46;  /* classic forest green */
+  --gs-red:             #991b1b;  /* clear danger red */
+  --gs-amber:           #78350f;  /* deep readable amber */
+  --gs-purple:          #3730a3;  /* industrial indigo/purple */
 
   /* ── Primary / Brand ── */
   --gs-on-surface:      #1b1d0e;
-  --gs-primary:         #5c5d6e;  /* lavender primary */
-  --gs-primary-container: #e6e6fa; /* lavender container */
+  --gs-primary:         #4338ca;  /* deep indigo */
+  --gs-primary-container: #e0e7ff; /* light indigo container */
 
   /* ── Editorial fonts ── */
   --font-sans:          'Manrope', system-ui, sans-serif;
@@ -239,7 +239,7 @@ html.light .font-mono-gs {
 html.light .label-archival {
   font-family: 'Manrope', sans-serif;
   font-size: 0.6875rem;
-  font-weight: 600;
+  font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
   color: var(--gs-text-muted);
@@ -277,9 +277,11 @@ html.light .gs-float {
 /* ─── Light body font override ─── */
 html.light body {
   font-family: 'Manrope', system-ui, sans-serif;
+  font-weight: 500;
 }
 html.light h1, html.light h2, html.light .gs-headline {
   font-family: 'Newsreader', Georgia, serif;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 

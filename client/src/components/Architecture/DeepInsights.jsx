@@ -106,9 +106,9 @@ export default function DeepInsights({ owner, repo }) {
              )}
              <div className="flex flex-wrap gap-2 custom-scrollbar overflow-y-visible pr-2 max-h-[400px]">
                {busFactorData.heatmap.map((file, i) => (
-                 <div key={i} className="group relative w-10 h-10 rounded-md flex items-center justify-center cursor-crosshair transition-transform hover:scale-125 hover:z-50" 
-                      style={{ background: file.risk === 'high' ? 'rgba(248,81,73,0.8)' : file.risk === 'medium' ? 'rgba(210,153,34,0.8)' : 'rgba(46,160,67,0.8)' }}>
-                   <span className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-[300px] px-4 py-3 bg-[#010101] text-white text-[12px] font-mono-gs rounded-lg border border-white/10 pointer-events-none z-[100] shadow-2xl">
+                 <div key={i} className="group relative w-10 h-10 rounded-md flex items-center justify-center cursor-crosshair transition-transform hover:scale-125 hover:z-50 shadow-sm" 
+                      style={{ background: file.risk === 'high' ? 'var(--gs-red)' : file.risk === 'medium' ? 'var(--gs-amber)' : 'var(--gs-green)', opacity: 0.85 }}>
+                   <span className="opacity-0 group-hover:opacity-100 absolute bottom-full left-1/2 -translate-x-1/2 mb-3 w-max max-w-[300px] px-4 py-3 bg-[#0a0b06] text-white text-[12px] font-mono-gs rounded-lg border border-white/10 pointer-events-none z-[100] shadow-2xl">
                      <div className="truncate mb-1 opacity-70">{file.path}</div>
                      <div className="font-bold">{file.unique_contributors} contributor(s)</div>
                    </span>
@@ -122,9 +122,9 @@ export default function DeepInsights({ owner, repo }) {
       </div>
 
       {/* README Scorecard */}
-      <div className="rounded-xl p-8 flex flex-col" style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}>
+      <div className="rounded-xl p-8 flex flex-col transition-all duration-300" style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}>
          <div className="flex items-center gap-3 mb-4">
-           <div className="w-8 h-8 rounded-lg flex items-center justify-center border" style={{ background: 'rgba(188,140,255,0.1)', borderColor: 'rgba(188,140,255,0.2)', color: '#bc8cff' }}>
+           <div className="w-8 h-8 rounded-lg flex items-center justify-center border" style={{ background: 'rgba(55,48,163,0.1)', borderColor: 'rgba(55,48,163,0.2)', color: 'var(--gs-purple)' }}>
              <Sparkles size={16} />
            </div>
            <h3 className="text-[14px] font-bold tracking-wider font-mono-gs uppercase text-[var(--gs-text)]">Readme Onboarding AI</h3>
