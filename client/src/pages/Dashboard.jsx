@@ -22,7 +22,7 @@ const MoonIcon = () => (
 
 const TRENDING_REPOS = [
   { full_name: 'tensorflow/tensorflow', language: 'Python', stars: '176k', forks: '88k', desc: 'An open source machine learning framework for everyone.' },
-  { full_name: 'microsoft/vscode', language: 'TypeScript', stars: '148k', forks: '26k', desc: 'Visual Studio Code.' },
+  { full_name: 'freeCodeCamp/freeCodeCamp', language: 'TypeScript', stars: '386k', forks: '35k', desc: 'freeCodeCamp.org\'s open-source codebase and curriculum.' },
   { full_name: 'vuejs/vue', language: 'JavaScript', stars: '204k', forks: '33k', desc: 'Vue.js is a progressive, incrementally-adoptable JavaScript framework...' },
   { full_name: 'facebook/react', language: 'JavaScript', stars: '210k', forks: '44k', desc: 'A declarative, efficient, and flexible JavaScript library for building user interfaces.' },
 ];
@@ -167,9 +167,16 @@ const Dashboard = () => {
     }
   };
 
-  // Trigger search dynamically when filters or sort change if there's already a search state
+  // Trigger search dynamically when filters change
   useEffect(() => {
-    if (hasSearched) performSearch();
+    if (activeFilters.length > 0) {
+      performSearch();
+    } else if (!query.trim()) {
+      setSearchResults([]);
+      setHasSearched(false);
+    } else if (hasSearched) {
+      performSearch();
+    }
   }, [activeFilters]);
 
   // Client-side sort
@@ -234,12 +241,12 @@ const Dashboard = () => {
 
         <div className="w-full max-w-4xl mb-4 relative z-20">
           <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-4 gap-4">
-            <div className="w-full md:w-auto overflow-x-auto pb-2 scrollbar-none flex-1">
-              <div className="flex items-center gap-6 whitespace-nowrap">
+            <div className="w-full flex-1">
+              <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
                 {FILTER_GROUPS.map((group) => (
                   <div key={group.label} className="flex flex-col gap-2">
                     <span className="text-[11px] uppercase tracking-widest text-[var(--gs-text-muted)] font-mono-gs">{group.label}</span>
-                    <div className="flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       {group.items.map(item => {
                         const isActive = activeFilters.includes(item);
                         return (
@@ -343,6 +350,7 @@ const Dashboard = () => {
                     className="devpulse-card p-6 flex flex-col text-left group hover:border-[var(--gs-green)] rounded-xl"
                     style={{ background: 'var(--gs-card)' }}>
                     <div className="flex items-center gap-3 mb-4">
+                      <img src={`https://github.com/${repo.full_name.split('/')[0]}.png`} className="w-5 h-5 rounded-md" alt="Avatar"/>
                       <span className="text-sm font-bold font-mono-gs group-hover:text-[var(--gs-green)] transition-colors">{repo.full_name}</span>
                     </div>
                     <p className="text-xs text-[var(--gs-text-2)] mb-4 flex-1 line-clamp-2">{repo.desc}</p>
