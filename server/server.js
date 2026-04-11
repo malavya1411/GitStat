@@ -4,6 +4,7 @@ const cookieParser = require('cookie-parser');
 const axios = require('axios');
 const dotenv = require('dotenv');
 const crypto = require('crypto');
+const { GoogleGenAI } = require('@google/genai');
 
 dotenv.config();
 
@@ -133,6 +134,11 @@ const getGithubConfig = (accessToken) => ({
     'User-Agent': 'GitStat-App'
   }
 });
+
+const getAiClient = () => {
+  if (!process.env.GEMINI_API_KEY) return null;
+  return new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+};
 
 // OAuth Callback Route
 app.get('/auth/callback', async (req, res) => {
@@ -498,6 +504,142 @@ app.get('/api/repo/:owner/:repo/deployments', async (req, res) => {
   } catch (error) {
     console.error('Deployments Error:', error.response?.data || error.message);
     res.status(error.response?.status || 500).json({ error: 'Failed to fetch deployments' });
+  }
+});
+
+// README Onboarding Quality Scorecard
+app.get('/api/repo/:owner/:repo/readme-score', async (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Not logged in' });
+  const { owner, repo } = req.params;
+  const config = getGithubConfig(session.accessToken);
+  
+  try {
+    const readmeRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}/readme`, config);
+    const readmeContent = Buffer.from(readmeRes.data.content, 'base64').toString('utf-8');
+
+    const ai = getAiClient();
+    if (!ai) return res.status(500).json({ error: 'Gemini API not configured' });
+
+    const prompt = `Analyze this README for onboarding quality. Does it have a clear setup guide, contribution guidelines, code of conduct link, license, contact information, and a description of the project's purpose? Score each category 0-10 and return JSON ONLY in this format: { "setup_guide": 8, "contribution_guidelines": 5, "code_of_conduct": 0, "license": 10, "contact": 5, "purpose": 9, "suggestions": ["Add a code of conduct", "Improve setup guide"] }.\n\nREADME:\n${readmeContent.substring(0, 5000)}`;
+
+    const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+    });
+    
+    // Parse json from response
+    let text = response.text || '';
+    if (text.includes('\`\`\`json')) {
+      text = text.split('\`\`\`json')[1].split('\`\`\`')[0];
+    } else if (text.includes('\`\`\`')) {
+      text = text.split('\`\`\`')[1].split('\`\`\`')[0];
+    }
+    const scorecard = JSON.parse(text.trim());
+    
+    res.json(scorecard);
+  } catch (error) {
+    console.error('README Score Error:', error.response?.data || error.message);
+    res.status(error.response?.status || 500).json({ error: 'Failed to score README' });
+  }
+});
+
+// Bus Factor Heatmap
+app.get('/api/repo/:owner/:repo/bus-factor', async (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Not logged in' });
+  const { owner, repo } = req.params;
+  const config = getGithubConfig(session.accessToken);
+  
+  try {
+    const repoInfo = await axios.get(`https://api.github.com/repos/${owner}/${repo}`, config);
+    const defaultBranch = repoInfo.data.default_branch;
+    
+    const treeRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}/git/trees/${defaultBranch}?recursive=1`, config);
+    
+    // Filter to code files roughly and limit to 40 max to avoid hitting GitHub API limits too hard
+    const blobs = treeRes.data.tree.filter(t => t.type === 'blob');
+    const filesToAnalyze = blobs.slice(0, 40);
+    
+    let totalFilesAnalyzed = 0;
+    let singleContributorFiles = 0;
+    const heatmap = [];
+
+    // process sequentially to avoid triggering abuse mechanisms
+    for (let f of filesToAnalyze) {
+      try {
+        const commitsRes = await axios.get(`https://api.github.com/repos/${owner}/${repo}/commits?path=${f.path}&per_page=10`, config);
+        const uniqueAuthors = new Set();
+        for (let c of commitsRes.data) {
+           if (c.author && c.author.login) uniqueAuthors.add(c.author.login);
+           else if (c.commit && c.commit.author) uniqueAuthors.add(c.commit.author.name);
+        }
+        
+        const count = uniqueAuthors.size;
+        totalFilesAnalyzed++;
+        if (count === 1) singleContributorFiles++;
+        
+        heatmap.push({
+           path: f.path,
+           unique_contributors: count,
+           risk: count === 1 ? 'high' : (count === 2 ? 'medium' : 'low')
+        });
+      } catch (err) {
+        // ignore individual file errors
+      }
+    }
+
+    const bus_factor_score = totalFilesAnalyzed === 0 ? 100 : Math.round(((totalFilesAnalyzed - singleContributorFiles) / totalFilesAnalyzed) * 100);
+    
+    res.json({ bus_factor_score, heatmap });
+  } catch (error) {
+    console.error('Bus Factor Error:', error.message);
+    res.status(500).json({ error: 'Failed to calculate bus factor' });
+  }
+});
+
+// GitStat Embeddable Badge
+app.get('/badge/:owner/:repo', async (req, res) => {
+  const { owner, repo } = req.params;
+  try {
+     const authQuery = GITHUB_CLIENT_ID ? `client_id=${GITHUB_CLIENT_ID}&client_secret=${GITHUB_CLIENT_SECRET}` : '';
+     const url = `https://api.github.com/repos/${owner}/${repo}/stats/contributors?${authQuery}`;
+     const statsRes = await axios.get(url);
+     
+     let score = 50;
+     if (statsRes.status === 200 && Array.isArray(statsRes.data)) {
+        const count = statsRes.data.length;
+        score = Math.min(100, count * 5 + 40); 
+     } else if (statsRes.status === 202) {
+        score = 65;
+     }
+     
+     let color = '#ef4444'; // red
+     if (score >= 80) color = '#22c55e'; // green
+     else if (score >= 60) color = '#eab308'; // yellow
+     
+     const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="120" height="20">
+  <linearGradient id="b" x2="0" y2="100%"><stop offset="0" stop-color="#bbb" stop-opacity=".1"/><stop offset="1" stop-opacity=".1"/></linearGradient>
+  <clipPath id="a"><rect width="120" height="20" rx="3" fill="#fff"/></clipPath>
+  <g clip-path="url(#a)">
+    <path fill="#555" d="M0 0h60v20H0z"/>
+    <path fill="${color}" d="M60 0h60v20H60z"/>
+    <path fill="url(#b)" d="M0 0h120v20H0z"/>
+  </g>
+  <g fill="#fff" text-anchor="middle" font-family="DejaVu Sans,Verdana,Geneva,sans-serif" font-size="110">
+    <text x="300" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="500">Health</text>
+    <text x="300" y="140" transform="scale(.1)" textLength="500">Health</text>
+    <text x="900" y="150" fill="#010101" fill-opacity=".3" transform="scale(.1)" textLength="500">${score}</text>
+    <text x="900" y="140" transform="scale(.1)" textLength="500">${score}</text>
+  </g>
+</svg>`;
+
+     res.setHeader('Content-Type', 'image/svg+xml');
+     res.setHeader('Cache-Control', 'public, max-age=3600');
+     res.send(svg);
+  } catch(error) {
+     res.setHeader('Content-Type', 'image/svg+xml');
+     res.send(`<svg xmlns="http://www.w3.org/2000/svg" width="120" height="20"><rect width="120" height="20" fill="#999"/><text x="10" y="14" fill="#fff" font-family="sans-serif" font-size="11">Health: N/A</text></svg>`);
   }
 });
 
