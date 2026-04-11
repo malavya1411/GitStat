@@ -701,30 +701,46 @@ app.get('/api/repo/:owner/:repo/bus-factor', async (req, res) => {
     let singleContributorFiles = 0;
     const heatmap = [];
 
-    // Sequential to avoid abuse rate limits
-    for (let f of blobs) {
-      try {
-        const commitsRes = await fetchWithTimeout(
-          `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(f.path)}&per_page=10`,
-          config,
-          8000
-        );
-        const uniqueAuthors = new Set();
-        for (let c of commitsRes.data) {
-           if (c.author && c.author.login) uniqueAuthors.add(c.author.login);
-           else if (c.commit && c.commit.author) uniqueAuthors.add(c.commit.author.name);
+    // Process in parallel batches of 10 to speed up latency without hitting API secondary rate limits violently
+    const CONCURRENCY = 10;
+    for (let i = 0; i < blobs.length; i += CONCURRENCY) {
+      const batch = blobs.slice(i, i + CONCURRENCY);
+      const batchPromises = batch.map(async (f) => {
+        try {
+          const commitsRes = await fetchWithTimeout(
+            `https://api.github.com/repos/${owner}/${repo}/commits?path=${encodeURIComponent(f.path)}&per_page=10`,
+            config,
+            8000
+          );
+          const uniqueAuthors = new Set();
+          for (let c of commitsRes.data) {
+             if (c.author && c.author.login) uniqueAuthors.add(c.author.login);
+             else if (c.commit && c.commit.author) uniqueAuthors.add(c.commit.author.name);
+          }
+          return { success: true, count: uniqueAuthors.size, path: f.path };
+        } catch (fileErr) {
+          return { success: false, timeout: !!fileErr.isTimeout };
         }
-        const count = uniqueAuthors.size;
+      });
+
+      const results = await Promise.all(batchPromises);
+      let timeoutEncountered = false;
+      
+      for (const res of results) {
+        if (!res.success) {
+          if (res.timeout) timeoutEncountered = true;
+          continue;
+        }
         totalFilesAnalyzed++;
-        if (count === 1) singleContributorFiles++;
+        if (res.count === 1) singleContributorFiles++;
         heatmap.push({
-           path: f.path,
-           unique_contributors: count,
-           risk: count === 1 ? 'high' : (count === 2 ? 'medium' : 'low')
+           path: res.path,
+           unique_contributors: res.count,
+           risk: res.count === 1 ? 'high' : (res.count === 2 ? 'medium' : 'low')
         });
-      } catch (fileErr) {
-        if (fileErr.isTimeout) break; // stop if we're being slow
       }
+
+      if (timeoutEncountered) break; // Break out of further batches if limits/timeouts are hit
     }
 
     const bus_factor_score = totalFilesAnalyzed === 0 ? 100 : Math.round(((totalFilesAnalyzed - singleContributorFiles) / totalFilesAnalyzed) * 100);
