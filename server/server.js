@@ -507,6 +507,84 @@ app.get('/api/repo/:owner/:repo/deployments', async (req, res) => {
   }
 });
 
+// ─── Architecture Section Routes ────────────────────────────────
+
+// Basic repo info (default branch, description, etc.)
+app.get('/api/repo-info/:owner/:repo', async (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Not logged in' });
+  const { owner, repo } = req.params;
+  try {
+    const r = await axios.get(`https://api.github.com/repos/${owner}/${repo}`, getGithubConfig(session.accessToken));
+    const { default_branch, description, stargazers_count, forks_count, open_issues_count, language } = r.data;
+    res.json({ default_branch, description, stargazers_count, forks_count, open_issues_count, language });
+  } catch (err) {
+    res.status(err.response?.status || 500).json({ error: 'Failed to fetch repo info' });
+  }
+});
+
+// Full recursive file tree via git trees API
+app.get('/api/repo-tree/:owner/:repo', async (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Not logged in' });
+  const { owner, repo } = req.params;
+  const branch = req.query.branch || 'HEAD';
+  try {
+    const r = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}/git/trees/${branch}?recursive=1`,
+      getGithubConfig(session.accessToken)
+    );
+    // Return truncated-flag + tree array
+    res.json({ tree: r.data.tree || [], truncated: r.data.truncated || false });
+  } catch (err) {
+    res.status(err.response?.status || 500).json({ error: 'Failed to fetch repo tree' });
+  }
+});
+
+// Fetch a single file's contents (base64-decoded)
+app.get('/api/repo-file/:owner/:repo', async (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Not logged in' });
+  const { owner, repo } = req.params;
+  const path = req.query.path;
+  if (!path) return res.status(400).json({ error: 'path query param required' });
+  try {
+    const r = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}/contents/${encodeURIComponent(path)}`,
+      getGithubConfig(session.accessToken)
+    );
+    const content = r.data.encoding === 'base64'
+      ? Buffer.from(r.data.content, 'base64').toString('utf-8')
+      : r.data.content;
+    res.json({ content, sha: r.data.sha, size: r.data.size });
+  } catch (err) {
+    res.status(err.response?.status || 500).json({ error: 'Failed to fetch file' });
+  }
+});
+
+// Good first issue count
+app.get('/api/good-first-issues/:owner/:repo', async (req, res) => {
+  const session = getSession(req);
+  if (!session) return res.status(401).json({ error: 'Not logged in' });
+  const { owner, repo } = req.params;
+  try {
+    const r = await axios.get(
+      `https://api.github.com/repos/${owner}/${repo}/issues?labels=good+first+issue&state=open&per_page=1`,
+      getGithubConfig(session.accessToken)
+    );
+    // GitHub returns total via Link header; use array length as minimum
+    const linkHeader = r.headers.link || '';
+    let count = r.data.length;
+    const lastMatch = linkHeader.match(/page=(\d+)>; rel="last"/);
+    if (lastMatch) count = parseInt(lastMatch[1], 10);
+    res.json({ count });
+  } catch (err) {
+    res.json({ count: 0 });
+  }
+});
+
+// ──────────────────────────────────────────────────────────────────
+
 // README Onboarding Quality Scorecard
 app.get('/api/repo/:owner/:repo/readme-score', async (req, res) => {
   const session = getSession(req);

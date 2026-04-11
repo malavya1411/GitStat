@@ -28,11 +28,12 @@ const BackIcon = () => (
 );
 
 const NAV_ITEMS = [
-  { key: 'overview',     label: 'Overview',       path: (o, r) => `/repo/${o}/${r}/overview` },
-  { key: 'contributors', label: 'Contributors',   path: (o, r) => `/repo/${o}/${r}` },
-  { key: 'pulls',        label: 'Pull Requests',  path: (o, r) => `/repo/${o}/${r}/pulls` },
-  { key: 'deployments',  label: 'Deployments',    path: (o, r) => `/repo/${o}/${r}/deployments` },
-  { key: 'compare',      label: 'Compare',        path: (o, r) => `/repo/${o}/${r}/compare` },
+  { key: 'overview',      label: 'Overview',        path: (o, r) => `/repo/${o}/${r}/overview` },
+  { key: 'contributors',  label: 'Contributors',    path: (o, r) => `/repo/${o}/${r}` },
+  { key: 'architecture',  label: 'Deep Analysis',   path: (o, r) => `/repo/${o}/${r}/deep-analysis` },
+  { key: 'pulls',         label: 'Pull Requests',   path: (o, r) => `/repo/${o}/${r}/pulls` },
+  { key: 'deployments',   label: 'Deployments',     path: (o, r) => `/repo/${o}/${r}/deployments` },
+  { key: 'compare',       label: 'Compare',         path: (o, r) => `/repo/${o}/${r}/compare` },
 ];
 
 const RepoLayout = ({ children, searchSlot }) => {
@@ -46,6 +47,7 @@ const RepoLayout = ({ children, searchSlot }) => {
   const activeKey = (() => {
     const p = location.pathname;
     if (p.endsWith('/overview')) return 'overview';
+    if (p.endsWith('/deep-analysis')) return 'architecture';
     if (p.endsWith('/pulls')) return 'pulls';
     if (p.endsWith('/deployments')) return 'deployments';
     if (p.endsWith('/compare')) return 'compare';

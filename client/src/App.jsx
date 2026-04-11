@@ -11,6 +11,7 @@ import PullRequestsPage from './pages/PullRequestsPage';
 import DeploymentsPage from './pages/DeploymentsPage';
 import NetworkGraphPage from './pages/NetworkGraphPage';
 import RepoComparePage from './pages/RepoComparePage';
+import DeepAnalysisPage from './pages/DeepAnalysisPage';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -36,6 +37,7 @@ function AppRoutes() {
       <Route path="/repos" element={<PrivateRoute><ReposPage /></PrivateRoute>} />
       <Route path="/repo/:owner/:repo" element={<PrivateRoute><RepoAnalysis /></PrivateRoute>} />
       <Route path="/repo/:owner/:repo/overview" element={<PrivateRoute><OverviewPage /></PrivateRoute>} />
+      <Route path="/repo/:owner/:repo/deep-analysis" element={<PrivateRoute><DeepAnalysisPage /></PrivateRoute>} />
       <Route path="/repo/:owner/:repo/pulls" element={<PrivateRoute><PullRequestsPage /></PrivateRoute>} />
       <Route path="/repo/:owner/:repo/deployments" element={<PrivateRoute><DeploymentsPage /></PrivateRoute>} />
       <Route path="/repo/:owner/:repo/compare" element={<PrivateRoute><RepoComparePage /></PrivateRoute>} />
