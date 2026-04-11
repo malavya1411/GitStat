@@ -117,6 +117,7 @@ const ChartDrawer = ({ user, isOpen, onClose }) => {
   };
   
   const radarOptions = {
+    layout: { padding: 24 },
     scales: {
       r: {
         angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
@@ -271,9 +272,17 @@ const ChartDrawer = ({ user, isOpen, onClose }) => {
                         <div className="flex justify-between items-center mb-4">
                           <h4 className="font-mono-gs text-[10px] uppercase tracking-widest text-[var(--gs-text-2)]">GitHub Interaction Pattern</h4>
                         </div>
-                        <div className="p-4 rounded-xl flex items-center justify-center relative" style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}>
-                          <div className="h-72 w-full max-w-[340px]">
+                        <div className="p-4 rounded-xl flex flex-col items-center justify-center relative" style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}>
+                          <div className="h-72 w-full max-w-[380px]">
                             <Radar data={radarData} options={radarOptions} />
+                          </div>
+                          <div className="mt-4 grid grid-cols-2 gap-3 text-[10px] leading-relaxed" style={{ color: 'var(--gs-text-2)' }}>
+                            <div><strong style={{ color: 'var(--gs-text)' }}>Morning Person:</strong> High activity during AM hours.</div>
+                            <div><strong style={{ color: 'var(--gs-text)' }}>Weekend Warrior:</strong> Frequent commits on Sat/Sun.</div>
+                            <div><strong style={{ color: 'var(--gs-text)' }}>PR Quality:</strong> High ratio of merged vs opened PRs.</div>
+                            <div><strong style={{ color: 'var(--gs-text)' }}>Burst Worker:</strong> Intense coding sessions vs steady rhythm.</div>
+                            <div><strong style={{ color: 'var(--gs-text)' }}>Reviewer:</strong> Active in reviewing and commenting on PRs.</div>
+                            <div><strong style={{ color: 'var(--gs-text)' }}>Fast Responder:</strong> Quick turnaround on threads/action items.</div>
                           </div>
                         </div>
                      </div>
