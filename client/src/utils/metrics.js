@@ -83,9 +83,14 @@ export const predictBurnout = (c, offsetWeeks = 0) => {
     // Only flag if it's within the next 8 weeks
     if (weeksRemaining > 0 && weeksRemaining <= 8) {
       return {
+        // backward-compat fields used by ContributorCard
         isBurnoutRisk: true,
-        slope: slope.toFixed(2),
         weeksRemaining,
+        // new fields used by burnout modal
+        atRisk: true,
+        weeksToFade: weeksRemaining,
+        currentWeeklyCommits: y[y.length - 1],
+        slope: slope.toFixed(2),
       };
     }
   }

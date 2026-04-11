@@ -7,6 +7,7 @@ import { Bar } from 'react-chartjs-2';
 import { getCachedAnalysis } from '../utils/apiCache';
 import RepoLayout from '../components/RepoLayout';
 import DeepInsights from '../components/Architecture/DeepInsights';
+import { predictBurnout } from '../utils/metrics';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
@@ -61,6 +62,7 @@ const OverviewPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [activeBand, setActiveBand] = useState(null); // 'At Risk' | 'Stressed' | 'Healthy' | 'Thriving'
+  const [showBurnoutModal, setShowBurnoutModal] = useState(false);
 
   const load = () => {
     setLoading(true); setError('');
@@ -190,6 +192,14 @@ const OverviewPage = () => {
     },
   };
 
+  const burnoutPredictions = useMemo(() => {
+    if (!data.length) return [];
+    return data
+      .map(c => ({ contributor: c, prediction: predictBurnout(c, 0) }))
+      .filter(item => item.prediction?.atRisk)
+      .sort((a, b) => (a.prediction.weeksToFade ?? 99) - (b.prediction.weeksToFade ?? 99));
+  }, [data]);
+
   const bandContributors = useMemo(() => {
     if (!activeBand) return [];
     return data.filter(c => {
@@ -243,6 +253,21 @@ const OverviewPage = () => {
 
       {!loading && !error && stats && (
         <div className="space-y-8">
+          {/* Burnout Prediction Button */}
+          <div className="mb-2">
+            <button
+              id="burnout-prediction-btn"
+              onClick={() => setShowBurnoutModal(true)}
+              className="burnout-btn"
+            >
+              <span className={burnoutPredictions.length > 0 ? 'burnout-icon-pulse' : ''}>⚠</span>
+              Run Burnout Prediction
+              {burnoutPredictions.length > 0 && (
+                <span className="burnout-badge">{burnoutPredictions.length} at risk</span>
+              )}
+            </button>
+          </div>
+
           {/* Summary stats bar */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
             {STAT_ITEMS.map(({ label, value }) => (
@@ -425,6 +450,109 @@ const OverviewPage = () => {
 
           {/* Deep Insights */}
           <DeepInsights owner={owner} repo={repo} />
+        </div>
+      )}
+
+      {/* ── Burnout Prediction Modal ── */}
+      {showBurnoutModal && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-2xl max-h-[80vh] overflow-hidden flex flex-col rounded-2xl shadow-2xl"
+               style={{ background: 'var(--gs-bg)', border: '1px solid var(--gs-border)' }}>
+            {/* Modal header */}
+            <div className="p-6 border-b flex items-center justify-between" style={{ borderColor: 'var(--gs-border)' }}>
+              <div>
+                <h2 className="text-xl font-bold" style={{ color: 'var(--gs-text)' }}>Burnout Prediction Analysis</h2>
+                <p className="text-xs font-mono-gs mt-0.5" style={{ color: 'var(--gs-text-muted)' }}>
+                  Based on linear regression of the last 6 weeks of commit activity
+                </p>
+              </div>
+              <button
+                onClick={() => setShowBurnoutModal(false)}
+                className="p-2 hover:bg-white/5 rounded-lg transition-colors"
+                style={{ color: 'var(--gs-text-muted)' }}
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5">
+                  <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+                </svg>
+              </button>
+            </div>
+
+            {/* Modal body */}
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+              {burnoutPredictions.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center gap-3">
+                  <span className="text-5xl" style={{ color: 'var(--gs-green)' }}>✓</span>
+                  <p className="font-bold text-base" style={{ color: 'var(--gs-text)' }}>No contributors show burnout trajectory right now.</p>
+                  <p className="text-sm font-mono-gs" style={{ color: 'var(--gs-text-muted)' }}>All active contributors have stable or improving commit trends.</p>
+                </div>
+              ) : (
+                burnoutPredictions.map(({ contributor, prediction }) => {
+                  const color = getHealthColor(contributor.health_score);
+                  const last6 = (contributor.weekly_commits || []).slice(-6);
+                  const maxV = Math.max(...last6, 1);
+                  const sparkPts = last6.map((v, i) => `${i * 24},${30 - (v / maxV) * 28}`).join(' ');
+                  return (
+                    <div
+                      key={contributor.login}
+                      className="flex items-start justify-between gap-4 p-4 rounded-xl transition-all hover:translate-x-1"
+                      style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}
+                    >
+                      {/* Left: avatar + name + health */}
+                      <div className="flex items-center gap-3 min-w-0">
+                        <img src={contributor.avatar_url} alt={contributor.login} className="w-10 h-10 rounded-full shrink-0"
+                             style={{ border: `2px solid ${color}` }} />
+                        <div className="min-w-0">
+                          <a href={`https://github.com/${contributor.login}`} target="_blank" rel="noreferrer"
+                             className="font-mono-gs text-sm font-bold truncate block hover:underline"
+                             style={{ color }}>
+                            @{contributor.login}
+                          </a>
+                          <span className="font-mono-gs text-[10px]" style={{ color: 'var(--gs-text-muted)' }}>
+                            Health: {contributor.health_score}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Right: prediction details */}
+                      <div className="flex flex-col items-end gap-2 shrink-0">
+                        <span className="font-mono-gs text-[11px] font-bold px-2 py-1 rounded-lg"
+                              style={{ background: 'rgba(210,153,34,0.12)', border: '1px solid rgba(210,153,34,0.35)', color: 'var(--gs-amber)' }}>
+                          ⚠ Silent in {prediction.weeksToFade} week{prediction.weeksToFade !== 1 ? 's' : ''}
+                        </span>
+                        <div className="font-mono-gs text-[10px] text-right space-y-0.5" style={{ color: 'var(--gs-text-muted)' }}>
+                          <div>Current: {prediction.currentWeeklyCommits} commits/wk</div>
+                          <div>Trend slope: {prediction.slope} /wk</div>
+                        </div>
+                        <svg viewBox="0 0 120 30" width="120" height="30" aria-hidden="true">
+                          <polyline fill="none" stroke="var(--gs-amber)" strokeWidth="1.5"
+                                    strokeLinejoin="round" strokeLinecap="round" points={sparkPts} />
+                        </svg>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Modal footer */}
+            <div className="p-4 border-t" style={{ borderColor: 'var(--gs-border)' }}>
+              {burnoutPredictions.length > 0 && (
+                <p className="text-center font-mono-gs text-[11px] mb-3" style={{ color: 'var(--gs-text-muted)' }}>
+                  {burnoutPredictions.length} contributor{burnoutPredictions.length !== 1 ? 's' : ''} showing burnout trajectory
+                  · Based on 6-week linear regression · Updated on every analysis
+                </p>
+              )}
+              <div className="text-center">
+                <button
+                  onClick={() => setShowBurnoutModal(false)}
+                  className="px-6 py-2 rounded-lg text-sm font-bold transition-all hover:opacity-80 active:scale-95"
+                  style={{ background: 'var(--gs-surface)', border: '1px solid var(--gs-border)', color: 'var(--gs-text)' }}
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </RepoLayout>
