@@ -11,7 +11,7 @@ GitStat is an open-source GitHub contributor health dashboard. It helps maintain
 
 ## Key Features
 
-### 🧠 Contributor Health Scoring
+### Contributor Health Scoring
 Every contributor receives a composite **Health Score (0–100)** calculated from five weighted signals:
 
 | Signal | Weight | What it measures |
@@ -26,7 +26,7 @@ Contributors are classified into four health bands: **At Risk** (0–40) · **St
 
 ---
 
-### 🔥 Burnout Prediction
+### Burnout Prediction
 GitStat runs **linear regression on the last 6 weeks** of commit activity for every active contributor. If the slope is consistently negative and the contributor is still active, GitStat projects exactly when they will go silent — and flags them before it happens.
 
 - **Overview Page** — "Run Burnout Prediction" button with live risk count badge
@@ -35,26 +35,26 @@ GitStat runs **linear regression on the last 6 weeks** of commit activity for ev
 
 ---
 
-### ⏳ Repo Health Time Machine
+### Repo Health Time Machine
 A slider on the Contributors page lets you **replay contributor metrics backwards up to 10 weeks** — recalculating velocity, streaks, and health scores for any historical point. Useful for understanding when a project started to decline.
 
 ---
 
-### 👻 Ghost Contributor Detector
+### Ghost Contributor Detector
 Automatically identifies contributors who were active in the previous 8 weeks but have had **zero commits in the last 4 weeks** — the first signal of silent churn.
 
 ---
 
-### 🗺️ Bus Factor Heatmap
+### Bus Factor Heatmap
 Analyses the last 10 commits per file across up to 40 files to compute **unique author counts per file**. Files with a single author are flagged as high risk.
 
 - **Bus Factor Score** = `(files with 2+ authors / total files) × 100`
-- Color-coded heatmap tiles (🔴 High / 🟡 Medium / 🟢 Low)
+- Color-coded heatmap tiles (High / Medium / Low)
 - Aggregated score shown on the Overview page KPI bar
 
 ---
 
-### 🤖 AI README Scorecard (Gemini 2.5 Flash)
+### AI README Scorecard (Gemini 2.5 Flash)
 Sends the repo's README to Gemini AI and returns a structured **0–10 score** across six onboarding dimensions:
 
 `Setup Guide` · `Contribution Guidelines` · `Code of Conduct` · `License` · `Contact` · `Purpose`
@@ -63,7 +63,7 @@ Includes actionable AI-generated suggestions for improving onboarding quality.
 
 ---
 
-### 🏗️ Architecture Visualizer
+### Architecture Visualizer
 Recursively maps the file tree (up to 500 files) and renders it in one of three modes based on repo size:
 
 | Repo Size | View Mode |
@@ -76,23 +76,23 @@ Comes with **automatic tech stack detection** — identifies languages (TS, JS, 
 
 ---
 
-### 🌐 Cross-Repo Network Graph
+### Cross-Repo Network Graph
 A **force-directed graph** (via `react-force-graph-2d`) that visualises contributor–repository connections across all repos analysed in the current session. Identifies **load-bearing contributors** — developers who span multiple projects and are a single point of failure.
 
 ---
 
-### ⚖️ Repo Compare
+### Repo Compare
 Side-by-side comparison of any two repositories across five metrics: PR success rate, contributor count, velocity, total commits, and newbie friendliness score. Search is debounced live against the GitHub API.
 
 ---
 
-### 🔄 Pull Requests & Deployments
+### Pull Requests & Deployments
 - **Pull Requests** — Filterable table (All / Open / Merged / Closed) with time-to-merge calculation and author attribution
 - **Deployments** — Timeline view with success/failure/pending status badges, environment label, git ref, and creator info. Includes a success rate KPI.
 
 ---
 
-### 🏷️ Embeddable Health Badge
+### Embeddable Health Badge
 Each analysed repo gets a **dynamic SVG badge** hosted at `/badge/:owner/:repo` that can be embedded in a README with a single line of Markdown — reflecting the live average contributor health score.
 
 ---
