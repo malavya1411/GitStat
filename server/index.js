@@ -21,6 +21,7 @@ startSessionCleanup();
 const allowedOrigins = [
   'http://localhost:5173',
   'http://localhost:5174',
+  'https://git-stat-olive.vercel.app',
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
