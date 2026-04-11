@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Geist+Sans:wght@300;400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Geist+Sans:wght@300;400;500;600;700;800;900&family=Newsreader:ital,opsz,wght@0,6..72,300;0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,300;1,6..72,400&family=Manrope:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 /* ─── Design tokens via Tailwind v4 @theme ─── */
@@ -6,6 +6,8 @@
   /* Fonts */
   --font-sans: 'Geist Sans', system-ui, -apple-system, sans-serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+  --font-editorial: 'Newsreader', Georgia, serif;
+  --font-ui: 'Manrope', system-ui, sans-serif;
 
   /* Dark theme custom colors */
   --color-bg-primary: #0a0c10;
@@ -66,26 +68,39 @@
   --gs-primary-container: #34a547;
 }
 
-/* Light theme */
+/* Light theme — Editorial Flow Design System */
 html.light {
-  --gs-bg: #f6f8fa;
-  --gs-bg-2: #f0f2f4;
-  --gs-card: #ffffff;
-  --gs-card-hover: #f3f4f6;
-  --gs-surface: #eaeef2;
-  --gs-surface-high: #d8dee4;
-  --gs-border: #d0d7de;
-  --gs-border-subtle: #e1e4e8;
-  --gs-text: #1f2328;
-  --gs-text-2: #656d76;
-  --gs-text-muted: #9198a1;
-  --gs-green: #1a7f37;
-  --gs-red: #cf222e;
-  --gs-amber: #9a6700;
-  --gs-purple: #6e40c9;
-  --gs-on-surface: #24292f;
-  --gs-primary: #1a7f37;
-  --gs-primary-container: #1a7f37;
+  /* ── Core Backgrounds (warm cream palette) ── */
+  --gs-bg:              #fbfbe2;  /* rich warm cream — page canvas */
+  --gs-bg-2:            #f5f5dc;  /* surface_container_low — standard card */
+  --gs-card:            #f5f5dc;  /* surface_container_low */
+  --gs-card-hover:      #efefd7;  /* surface_container — hovered/nested */
+  --gs-surface:         #efefd7;  /* surface_container — nested sections */
+  --gs-surface-high:    #dbdcc3;  /* surface_dim — deep tonal, sidebars */
+
+  /* ── No-line system: boundaries defined by tone, not borders ── */
+  --gs-border:          rgba(199, 197, 204, 0.20); /* ghost border — felt, not seen */
+  --gs-border-subtle:   rgba(199, 197, 204, 0.12);
+
+  /* ── Typography — warm, never pure black ── */
+  --gs-text:            #1b1d0e;  /* on_background — warm near-black */
+  --gs-text-2:          #5c5d6e;  /* primary/secondary labels */
+  --gs-text-muted:      #8a8b7e;  /* tertiary labels */
+
+  /* ── Data-viz accent colors — unchanged for bus factor/health ── */
+  --gs-green:           #1a7f37;  /* healthy / well-distributed */
+  --gs-red:             #cf222e;  /* at-risk / single contributor */
+  --gs-amber:           #9a6700;  /* medium risk / stressed */
+  --gs-purple:          #5c5d6e;  /* primary lavender for accents */
+
+  /* ── Primary / Brand ── */
+  --gs-on-surface:      #1b1d0e;
+  --gs-primary:         #5c5d6e;  /* lavender primary */
+  --gs-primary-container: #e6e6fa; /* lavender container */
+
+  /* ── Editorial fonts ── */
+  --font-sans:          'Manrope', system-ui, sans-serif;
+  --font-editorial:     'Newsreader', Georgia, serif;
 }
 
 /* ─── Base styles ─── */
@@ -181,8 +196,11 @@ body {
   -webkit-backdrop-filter: blur(20px);
 }
 html.light .gs-navbar {
-  background: rgba(246, 248, 250, 0.88);
-  border-bottom: 1px solid var(--gs-border);
+  background: rgba(251, 251, 226, 0.82);
+  border-bottom: none;
+  box-shadow: 0 1px 0 rgba(199, 197, 204, 0.18);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
 }
 
 /* ─── Health ring track fix ─── */
@@ -195,10 +213,88 @@ html.light .gs-navbar {
   border-radius: 0.75rem;
   transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
 }
+/* Light: no explicit border — tone carries hierarchy */
+html.light .devpulse-card {
+  border: none;
+  border-radius: 1.5rem;
+  box-shadow: 0 12px 32px rgba(27, 29, 14, 0.06);
+}
 
 /* ─── Report card section kept ─── */
 .gitstat-intel-page {
   background: var(--gs-bg);
 }
 
-::selection { background: rgba(46, 160, 67, 0.25); }
+/* ─── Light theme typography utilities ─── */
+.font-editorial {
+  font-family: 'Newsreader', Georgia, serif;
+  letter-spacing: -0.02em;
+}
+html.light .font-mono-gs {
+  font-family: 'Manrope', system-ui, sans-serif;
+  letter-spacing: 0.01em;
+}
+
+/* ─── Light theme: label-sm archival look ─── */
+html.light .label-archival {
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--gs-text-muted);
+}
+
+/* ─── Light theme card overrides ─── */
+html.light [style*="var(--gs-card)"],
+html.light [style*="var(--gs-surface)"] {
+  box-shadow: 0 12px 32px rgba(27, 29, 14, 0.06);
+}
+
+/* ─── Sidebar theming ─── */
+html.light .gs-sidebar {
+  background: #dbdcc3; /* surface_dim per design spec */
+  border-right: none;
+}
+html:not(.light) .gs-sidebar {
+  background: var(--gs-bg-2);
+  border-right: 1px solid var(--gs-border);
+}
+
+/* ─── Light: Primary button uses lavender ── */
+html.light .gs-btn-primary {
+  background: var(--gs-primary-container);
+  color: var(--gs-primary);
+  border: none;
+  border-radius: 0.75rem;
+}
+
+/* ─── Light: ambient floating shadow for key elements ─── */
+html.light .gs-float {
+  box-shadow: 0 12px 32px rgba(27, 29, 14, 0.06);
+}
+
+/* ─── Light body font override ─── */
+html.light body {
+  font-family: 'Manrope', system-ui, sans-serif;
+}
+html.light h1, html.light h2, html.light .gs-headline {
+  font-family: 'Newsreader', Georgia, serif;
+  letter-spacing: -0.02em;
+}
+
+/* ─── Light skeleton — warm tones ─── */
+html.light .skeleton {
+  background: linear-gradient(90deg, #efefd7 25%, #dbdcc3 50%, #efefd7 75%);
+  background-size: 200% 100%;
+}
+
+/* ─── Light scrollbar ─── */
+html.light ::-webkit-scrollbar-thumb {
+  background: #dbdcc3;
+}
+html.light ::-webkit-scrollbar-thumb:hover {
+  background: #c7c5cc;
+}
+
+::selection { background: rgba(92, 93, 110, 0.18); }

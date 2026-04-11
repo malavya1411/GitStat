@@ -54,16 +54,18 @@ const RepoLayout = ({ children, searchSlot }) => {
     return 'contributors';
   })();
 
+  const isLight = theme === 'light';
+
   return (
-    <div className="min-h-screen" style={{ background: 'var(--gs-bg)', color: 'var(--gs-text)' }}>
+    <div className="flex flex-col min-h-screen" style={{ background: 'var(--gs-bg)', color: 'var(--gs-text)' }}>
       <div className="noise-overlay" aria-hidden="true" />
 
       {/* ── Navbar ── */}
       <header className="gs-navbar sticky top-0 z-50 w-full">
-        <div className="flex items-center justify-between px-6 h-16 max-w-[1440px] mx-auto">
+        <div className="flex items-center justify-between px-6 h-16">
           <button type="button" onClick={() => navigate('/dashboard')}
-            className="text-xl font-black tracking-tighter transition-opacity hover:opacity-80"
-            style={{ fontFamily: "'Geist Sans', sans-serif", color: 'var(--gs-text)', background: 'none', border: 'none', cursor: 'pointer' }}>
+            className="text-xl font-bold tracking-tight transition-opacity hover:opacity-70"
+            style={{ fontFamily: isLight ? "'Newsreader', serif" : "'Geist Sans', sans-serif", color: 'var(--gs-text)', background: 'none', border: 'none', cursor: 'pointer', letterSpacing: '-0.02em' }}>
             GitStat
           </button>
           <div className="flex items-center gap-3">
@@ -87,50 +89,80 @@ const RepoLayout = ({ children, searchSlot }) => {
         </div>
       </header>
 
-      <div className="flex max-w-[1440px] mx-auto">
+      {/* ── Body: sidebar + content flush together ── */}
+      <div className="flex flex-1">
         {/* ── Sidebar ── */}
-        <aside className="hidden lg:flex flex-col h-[calc(100vh-4rem)] w-64 shrink-0 sticky top-16 py-8 font-mono-gs text-xs uppercase tracking-widest"
-          style={{ background: 'var(--gs-bg-2)', borderRight: '1px solid var(--gs-border)' }}>
-          <div className="px-6 mb-8">
-            <div className="font-black normal-case tracking-tight text-base"
-              style={{ fontFamily: "'Geist Sans', sans-serif", color: 'var(--gs-text)' }}>
-              {repo || 'Sovereign Console'}
+        <aside className="hidden lg:flex flex-col w-56 shrink-0 sticky top-16 h-[calc(100vh-4rem)] gs-sidebar"
+          style={{
+            background: isLight ? '#dbdcc3' : 'var(--gs-bg-2)',
+            borderRight: isLight ? 'none' : '1px solid var(--gs-border)',
+          }}>
+
+          {/* Repo identity block */}
+          <div className="px-5 pt-8 pb-6">
+            <div className="font-bold text-[15px] leading-tight"
+              style={{ fontFamily: isLight ? "'Newsreader', serif" : "'Geist Sans', sans-serif", color: 'var(--gs-text)', letterSpacing: '-0.02em' }}>
+              {repo || 'Console'}
             </div>
-            <div className="text-[10px] mt-0.5" style={{ color: 'var(--gs-text-muted)' }}>
-              {owner ? `${owner}` : 'Elite Analysis v2.4'}
+            <div className="mt-1 text-[10px] font-semibold uppercase tracking-[0.08em]" style={{ color: 'var(--gs-text-muted)' }}>
+              {owner || 'Sovereign v2.4'}
             </div>
           </div>
 
-          <nav className="flex-1 space-y-0.5 px-3">
+          {/* Divider */}
+          <div style={{ height: '1px', background: isLight ? 'rgba(27,29,14,0.08)' : 'var(--gs-border)', margin: '0 20px 8px' }} />
+
+          {/* Nav */}
+          <nav className="flex-1 px-3 py-2 space-y-0.5">
             {NAV_ITEMS.map(({ key, label, path }) => {
               const isActive = key === activeKey;
               return (
                 <button key={key} type="button"
                   onClick={() => navigate(path(owner, repo))}
-                  className="w-full flex items-center gap-3 px-4 py-3 text-left transition-all duration-150"
+                  className="w-full flex items-center gap-2.5 px-3 py-2.5 text-left rounded-lg transition-all duration-150"
                   style={{
-                    color: isActive ? 'var(--gs-green)' : 'var(--gs-text-2)',
-                    background: isActive ? 'var(--gs-card)' : 'transparent',
-                    borderLeft: isActive ? '3px solid var(--gs-green)' : '3px solid transparent',
+                    fontSize: '0.8125rem',
+                    fontFamily: isLight ? "'Manrope', sans-serif" : 'inherit',
+                    fontWeight: isActive ? 600 : 400,
+                    color: isActive
+                      ? (isLight ? 'var(--gs-primary)' : 'var(--gs-green)')
+                      : 'var(--gs-text-2)',
+                    background: isActive
+                      ? (isLight ? 'rgba(230,230,250,0.8)' : 'var(--gs-surface)')
+                      : 'transparent',
                     cursor: 'pointer',
                   }}>
+                  {/* Active pill dot */}
+                  <span style={{
+                    width: 5, height: 5, borderRadius: '50%', flexShrink: 0,
+                    background: isActive
+                      ? (isLight ? 'var(--gs-primary)' : 'var(--gs-green)')
+                      : 'transparent',
+                    transition: 'background 150ms ease',
+                  }} />
                   <span>{label}</span>
                 </button>
               );
             })}
           </nav>
 
-          <div className="px-6 mt-auto">
+          {/* Back button */}
+          <div className="px-4 pb-8 pt-4">
             <button type="button" onClick={() => navigate('/dashboard')}
-              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-lg text-xs font-semibold normal-case tracking-normal transition-opacity hover:opacity-80"
-              style={{ background: 'var(--gs-green)', color: '#000' }}>
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl text-[12px] font-semibold transition-all hover:opacity-90 active:scale-95"
+              style={{
+                background: isLight ? 'var(--gs-primary)' : 'var(--gs-surface-high)',
+                color: isLight ? '#fff' : 'var(--gs-text)',
+                border: isLight ? 'none' : '1px solid var(--gs-border)',
+                boxShadow: isLight ? '0 8px 24px rgba(92,93,110,0.2)' : 'none',
+              }}>
               <BackIcon /> Back to Search
             </button>
           </div>
         </aside>
 
         {/* ── Page content ── */}
-        <main className="flex-1 min-h-screen p-8 lg:p-12">
+        <main className="flex-1 min-h-[calc(100vh-4rem)] p-8 lg:p-10 xl:p-12">
           {children}
         </main>
       </div>

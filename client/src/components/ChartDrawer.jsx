@@ -1,5 +1,6 @@
 import React, { useEffect, useRef } from 'react';
 import { Line, Radar } from 'react-chartjs-2';
+import { useTheme } from '../context/ThemeContext';
 import {
   Chart as ChartJS,
   CategoryScale,
@@ -50,6 +51,8 @@ const ExternalIcon = () => (
 
 const ChartDrawer = ({ user, isOpen, onClose }) => {
   const drawerRef = useRef(null);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   // Close on Escape
   useEffect(() => {
@@ -120,9 +123,16 @@ const ChartDrawer = ({ user, isOpen, onClose }) => {
     layout: { padding: 24 },
     scales: {
       r: {
-        angleLines: { color: 'rgba(255, 255, 255, 0.1)' },
-        grid: { color: 'rgba(255, 255, 255, 0.1)' },
-        pointLabels: { color: '#7d8590', font: { family: "'JetBrains Mono', monospace", size: 9 } },
+        angleLines: {
+          color: isLight ? 'rgba(27, 29, 14, 0.12)' : 'rgba(255, 255, 255, 0.10)',
+        },
+        grid: {
+          color: isLight ? 'rgba(27, 29, 14, 0.10)' : 'rgba(255, 255, 255, 0.10)',
+        },
+        pointLabels: {
+          color: isLight ? '#5c5d6e' : '#7d8590',
+          font: { family: isLight ? "'Manrope', sans-serif" : "'JetBrains Mono', monospace", size: 9 }
+        },
         ticks: { display: false, min: 0, max: 100 }
       }
     },
