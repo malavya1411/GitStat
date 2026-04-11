@@ -67,8 +67,15 @@ const PullRequestsPage = () => {
         <span className="font-mono-gs text-sm" style={{ color: 'var(--gs-text-muted)' }}>System / Repository / Pull Requests</span>
       </div>
       <div className="flex items-baseline gap-4 flex-wrap mb-8">
-        <h1 className="text-4xl font-black tracking-tighter" style={{ fontFamily: "'Geist Sans', sans-serif", color: 'var(--gs-text)' }}>{repo}</h1>
-        <span className="font-mono-gs text-xl" style={{ color: 'var(--gs-text-muted)' }}>/ Pull Requests</span>
+        <div className="flex items-baseline gap-4">
+          <h1 className="text-4xl font-black tracking-tighter" style={{ fontFamily: "'Geist Sans', sans-serif", color: 'var(--gs-text)' }}>{repo}</h1>
+          <span className="font-mono-gs text-xl" style={{ color: 'var(--gs-text-muted)' }}>/ Pull Requests</span>
+        </div>
+        {!loading && !error && pulls.length >= 100 && (
+          <span className="text-[13px] font-medium" style={{ color: 'var(--gs-text-2)' }}>
+            (Recent 100 pull requests have been shown)
+          </span>
+        )}
       </div>
 
       {/* Summary row */}

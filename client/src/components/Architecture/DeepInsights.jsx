@@ -122,6 +122,7 @@ export default function DeepInsights({ owner, repo }) {
       </div>
 
       {/* README Scorecard */}
+      {(!readmeLoading && (!readmeScore || readmeTimeout)) ? null : (
       <div className="rounded-xl p-8 flex flex-col transition-all duration-300" style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}>
          <div className="flex items-center gap-3 mb-4">
            <div className="w-8 h-8 rounded-lg flex items-center justify-center border" style={{ background: 'rgba(55,48,163,0.1)', borderColor: 'rgba(55,48,163,0.2)', color: 'var(--gs-purple)' }}>
@@ -141,9 +142,7 @@ export default function DeepInsights({ owner, repo }) {
                <div className="skeleton h-8 w-full rounded" />
                <div className="skeleton flex-1 mt-4 rounded" />
             </div>
-         ) : readmeTimeout ? (
-            <TimeoutState onRetry={() => setRetryKey(k => k + 1)} />
-         ) : readmeScore ? (
+         ) : (
             <div className="flex-1 flex flex-col gap-6">
               <div>
                 <ul className="space-y-3">
@@ -171,10 +170,9 @@ export default function DeepInsights({ owner, repo }) {
                  </div>
               )}
             </div>
-         ) : (
-            <div className="flex-1 flex items-center justify-center text-[var(--gs-text-muted)] text-[12px] font-mono-gs">Could not analyze README</div>
          )}
       </div>
+      )}
     </div>
   );
 }
