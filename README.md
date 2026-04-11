@@ -205,4 +205,4 @@ Contributions are welcome. Before touching the health score or burnout logic in 
 
 ## License
 
-MIT
+MIT — GitStat is fully open source. You are free to use, modify, and distribute it. Contributions, bug reports, and feature requests are all welcome via [GitHub Issues](https://github.com/malavya1411/GitStat/issues).
