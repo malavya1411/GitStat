@@ -231,7 +231,7 @@ const Dashboard = () => {
     setIsPersonalisedSearch(false);
     if (query.trim() || activeFilters.length > 0) {
       if (query.includes('/') && activeFilters.length === 0) {
-        navigate(`/repo/${query.trim()}`);
+        navigate(`/repo/${query.trim()}/overview`);
       } else {
         performSearch();
       }
@@ -433,7 +433,7 @@ const Dashboard = () => {
                   {sortedResults.map(repo => {
                     const match = isPersonalisedSearch && userProfile ? computeMatchScore(userProfile, repo) : null;
                     return (
-                      <button key={repo.id} onClick={() => navigate(`/repo/${repo.full_name}`)}
+                      <button key={repo.id} onClick={() => navigate(`/repo/${repo.full_name}/overview`)}
                         className="p-5 flex flex-col items-start text-left group hover:border-[var(--gs-green)] rounded-xl transition-colors w-full relative"
                         style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}>
                         <div className="flex items-start justify-between w-full mb-3 gap-2">
@@ -497,7 +497,7 @@ const Dashboard = () => {
               <h2 className="font-mono-gs text-xs uppercase tracking-[0.3em] mb-6 text-center" style={{ color: 'var(--gs-text-2)' }}>Trending Repositories</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {TRENDING_REPOS.map(repo => (
-                  <button key={repo.full_name} onClick={() => navigate(`/repo/${repo.full_name}`)}
+                  <button key={repo.full_name} onClick={() => navigate(`/repo/${repo.full_name}/overview`)}
                     className="devpulse-card p-6 flex flex-col text-left group hover:border-[var(--gs-green)] rounded-xl"
                     style={{ background: 'var(--gs-card)' }}>
                     <div className="flex items-center gap-3 mb-4">

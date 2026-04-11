@@ -218,10 +218,18 @@ const OverviewPage = () => {
           System / Repository / Overview
         </span>
       </div>
-      <div className="flex items-baseline gap-4 flex-wrap mb-10">
-        <h1 className="text-4xl md:text-5xl font-black tracking-tighter"
-          style={{ fontFamily: "'Geist Sans', sans-serif", color: 'var(--gs-text)' }}>{repo}</h1>
-        <span className="font-mono-gs text-xl" style={{ color: 'var(--gs-text-muted)' }}>/ {owner}</span>
+      <div className="mb-10">
+        <a href={`https://github.com/${owner}/${repo}`} target="_blank" rel="noopener noreferrer" 
+           className="inline-flex items-baseline gap-4 flex-wrap hover:opacity-80 transition-opacity group"
+           title={`View ${owner}/${repo} on GitHub`}>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tighter group-hover:text-[var(--gs-green)] transition-colors"
+            style={{ fontFamily: "'Geist Sans', sans-serif", color: 'var(--gs-text)' }}>
+            {repo}
+          </h1>
+          <span className="font-mono-gs text-xl transition-colors group-hover:text-[var(--gs-green)]" style={{ color: 'var(--gs-text-muted)' }}>
+            / {owner}
+          </span>
+        </a>
       </div>
 
       {loading && <Skeleton />}
