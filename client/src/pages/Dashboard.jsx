@@ -238,8 +238,20 @@ const Dashboard = () => {
     }
   };
 
+  // Debounced auto-search on query type
+  useEffect(() => {
+    if (isPersonalisedSearch) return;
+    if (query.trim().length > 0) {
+      const timeoutId = setTimeout(() => {
+        if (!query.includes('/')) performSearch();
+      }, 500);
+      return () => clearTimeout(timeoutId);
+    }
+  }, [query]);
+
   // Trigger search dynamically when filters change
   useEffect(() => {
+    if (isPersonalisedSearch) return;
     if (activeFilters.length > 0) {
       performSearch();
     } else if (!query.trim()) {
@@ -340,7 +352,10 @@ const Dashboard = () => {
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
                 )}
               </span>
-              <input ref={inputRef} type="text" value={query} onChange={e => setQuery(e.target.value)}
+              <input ref={inputRef} type="text" value={query} onChange={e => {
+                  setQuery(e.target.value);
+                  if (isPersonalisedSearch) setIsPersonalisedSearch(false);
+                }}
                 placeholder="Search any public GitHub repo..."
                 className="bg-transparent border-none outline-none w-full text-lg font-mono-gs"
                 style={{ color: 'var(--gs-text)', fontFamily: "'JetBrains Mono', monospace" }}
