@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
+import { computeMatchScore } from '../utils/matchScore';
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
 
@@ -40,6 +41,44 @@ const getDateDaysAgo = (days) => {
   const d = new Date();
   d.setDate(d.getDate() - days);
   return d.toISOString().split('T')[0];
+};
+
+const buildPersonalisedQuery = (userProfile) => {
+  if (!userProfile?.topLanguages || Object.keys(userProfile.topLanguages).length === 0) return 'good-first-issues:>3';
+  const topLang = Object.keys(userProfile.topLanguages)[0];
+  const sizeFilter = userProfile.preferredRepoSize === 'small'
+    ? 'stars:50..500'
+    : userProfile.preferredRepoSize === 'medium'
+    ? 'stars:500..10000'
+    : 'stars:>10000';
+  const activityFilter = userProfile.activityLevel === 'high'
+    ? 'pushed:>' + getDateDaysAgo(3)
+    : userProfile.activityLevel === 'medium'
+    ? 'pushed:>' + getDateDaysAgo(14)
+    : 'pushed:>' + getDateDaysAgo(60);
+
+  return `language:${topLang} ${sizeFilter} ${activityFilter} good-first-issues:>3`;
+};
+
+const MatchScoreRing = ({ score }) => {
+  const radius = 22;
+  const stroke = 3;
+  const normalizedRadius = radius - stroke * 2;
+  const circumference = normalizedRadius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (score / 100) * circumference;
+  const color = score >= 70 ? 'var(--gs-green)' : score >= 40 ? '#f59e0b' : '#ef4444';
+
+  return (
+    <div className="relative w-[44px] h-[44px] shrink-0 flex items-center justify-center">
+      <svg className="w-full h-full -rotate-90">
+        <circle stroke="var(--gs-border)" fill="transparent" strokeWidth={stroke} r={normalizedRadius} cx={22} cy={22} />
+        <circle stroke={color} fill="transparent" strokeWidth={stroke} strokeDasharray={circumference + ' ' + circumference} style={{ strokeDashoffset, transition: 'stroke-dashoffset 0.5s ease 0s' }} strokeLinecap="round" r={normalizedRadius} cx={22} cy={22} />
+      </svg>
+      <span className="absolute text-[11px] font-mono-gs font-bold" style={{ color: 'var(--gs-text)' }}>
+        {score}
+      </span>
+    </div>
+  );
 };
 
 const buildSearchQuery = (userQuery, activeFilters) => {
@@ -116,6 +155,17 @@ const Dashboard = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
   
+  const [userProfile, setUserProfile] = useState(null);
+  const [isPersonalisedSearch, setIsPersonalisedSearch] = useState(false);
+
+  useEffect(() => {
+    if (user) {
+      axios.get(`${API_BASE_URL}/api/user/profile`, { withCredentials: true })
+        .then(res => setUserProfile(res.data))
+        .catch(err => console.log('Profile fetch err', err));
+    }
+  }, [user]);
+  
   const searchContainerRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -135,6 +185,7 @@ const Dashboard = () => {
   }, []);
 
   const toggleFilter = (filter) => {
+    setIsPersonalisedSearch(false);
     setActiveFilters(prev => prev.includes(filter) ? prev.filter(f => f !== filter) : [...prev, filter]);
   };
 
@@ -156,8 +207,28 @@ const Dashboard = () => {
     }
   };
 
+  const handlePersonalisedSearch = async () => {
+    if (!userProfile) return;
+    setIsSearching(true);
+    setHasSearched(true);
+    setIsPersonalisedSearch(true);
+    setQuery('');
+    setActiveFilters([]);
+    setShowMobileFilters(false);
+    try {
+      const pQuery = buildPersonalisedQuery(userProfile);
+      const response = await axios.get(`${API_BASE_URL}/api/search-repos?q=${encodeURIComponent(pQuery)}`);
+      setSearchResults(response.data || []);
+    } catch (error) {
+      console.error('Personalised Search error:', error);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   const handleSearchSubmit = (e) => {
     e.preventDefault();
+    setIsPersonalisedSearch(false);
     if (query.trim() || activeFilters.length > 0) {
       if (query.includes('/') && activeFilters.length === 0) {
         navigate(`/repo/${query.trim()}`);
@@ -179,8 +250,17 @@ const Dashboard = () => {
     }
   }, [activeFilters]);
 
+  const getSortScore = (repo) => {
+    if (isPersonalisedSearch && userProfile) {
+      const match = computeMatchScore(userProfile, repo);
+      return match ? match.score : 0;
+    }
+    return 0;
+  };
+
   // Client-side sort
   const sortedResults = [...searchResults].sort((a, b) => {
+    if (isPersonalisedSearch) return getSortScore(b) - getSortScore(a);
     if (sortOption === 'Most Stars') return (b.stargazers_count || 0) - (a.stargazers_count || 0);
     if (sortOption === 'Recently Updated') return new Date(b.pushed_at || b.updated_at || 0) - new Date(a.pushed_at || a.updated_at || 0);
     if (sortOption === 'Most Issues') return (b.open_issues_count || 0) - (a.open_issues_count || 0);
@@ -240,6 +320,17 @@ const Dashboard = () => {
         </p>
 
         <div ref={searchContainerRef} className="w-full max-w-4xl mb-12 relative z-30">
+          <div className="flex justify-center mb-6">
+            <button
+              onClick={handlePersonalisedSearch}
+              className="px-6 py-3 rounded-full text-sm font-bold flex items-center gap-2 transition-all hover:scale-105 shadow-xl disabled:opacity-50 disabled:hover:scale-100"
+              style={{ background: 'var(--gs-green)', color: 'black', border: '1px solid rgba(0,255,0,0.3)' }}
+              disabled={!userProfile}
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2"><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>
+              Find my perfect repo
+            </button>
+          </div>
           <form onSubmit={handleSearchSubmit}>
             <div className="flex items-center p-4 rounded-xl shadow-2xl transition-all duration-300" style={{ background: 'var(--gs-surface)', border: `1px solid ${activeFilters.length > 0 ? 'var(--gs-green)' : 'var(--gs-border)'}` }}>
               <span style={{ color: 'var(--gs-green)' }} className="mr-4 shrink-0">
@@ -314,25 +405,65 @@ const Dashboard = () => {
         <div className="w-full max-w-4xl z-10 transition-all">
           {hasSearched ? (
             sortedResults.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {sortedResults.map(repo => (
-                  <button key={repo.id} onClick={() => navigate(`/repo/${repo.full_name}`)}
-                    className="p-5 flex flex-col items-start text-left group hover:border-[var(--gs-green)] rounded-xl transition-colors w-full"
-                    style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}>
-                    <div className="flex items-center justify-between w-full mb-3">
-                      <span className="text-sm font-bold truncate group-hover:text-[var(--gs-green)]" style={{ color: 'var(--gs-text)' }}>{repo.full_name}</span>
-                      {getLanguageBadge(repo.language)}
-                    </div>
-                    <p className="text-xs mb-4 line-clamp-2" style={{ color: 'var(--gs-text-2)' }}>{repo.description || 'No description available.'}</p>
-                    <div className="flex items-center gap-4 text-[10px] uppercase font-mono-gs tracking-widest w-full">
-                      <span className="text-[var(--gs-text-muted)]">★ {repo.stargazers_count > 1000 ? (repo.stargazers_count/1000).toFixed(1)+'k' : repo.stargazers_count}</span>
-                      <span className="text-[var(--gs-text-muted)]">𐄂 {repo.open_issues_count || 0} issues</span>
-                      <div className="ml-auto flex shrink-0">
-                        {getFriendlinessBadge(repo)}
-                      </div>
-                    </div>
-                  </button>
-                ))}
+              <div className="flex flex-col gap-4">
+                {isPersonalisedSearch && userProfile && (
+                  <div className="mb-4 text-center border p-4 rounded-2xl" style={{ borderColor: 'var(--gs-border)', background: 'var(--gs-surface)' }}>
+                    <h2 className="text-xl font-bold font-mono-gs" style={{ color: 'var(--gs-text)' }}>Repos picked for you</h2>
+                    <p className="text-[11px] mt-2 font-mono-gs uppercase tracking-widest" style={{ color: 'var(--gs-text-2)' }}>
+                      Based on your {Object.keys(userProfile.topLanguages || {})[0] || 'primary'} background · {userProfile.preferredRepoSize} community preference · {userProfile.activityLevel} activity pace
+                    </p>
+                  </div>
+                )}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {sortedResults.map(repo => {
+                    const match = isPersonalisedSearch && userProfile ? computeMatchScore(userProfile, repo) : null;
+                    return (
+                      <button key={repo.id} onClick={() => navigate(`/repo/${repo.full_name}`)}
+                        className="p-5 flex flex-col items-start text-left group hover:border-[var(--gs-green)] rounded-xl transition-colors w-full relative"
+                        style={{ background: 'var(--gs-card)', border: '1px solid var(--gs-border)' }}>
+                        <div className="flex items-start justify-between w-full mb-3 gap-2">
+                          <div className="min-w-0 flex-1">
+                            <span className="text-sm font-bold truncate group-hover:text-[var(--gs-green)] block" style={{ color: 'var(--gs-text)' }}>{repo.full_name}</span>
+                            <div className="mt-2 flex">
+                              {getLanguageBadge(repo.language)}
+                            </div>
+                          </div>
+                          {match ? (
+                            <MatchScoreRing score={match.score} />
+                          ) : isPersonalisedSearch ? (
+                            <div className="w-11 h-11 rounded-full animate-pulse border-4 border-[var(--gs-border)] shrink-0" style={{ background: 'rgba(255,255,255,0.02)' }} />
+                          ) : null}
+                        </div>
+                        <p className="text-xs mb-4 line-clamp-2 w-full" style={{ color: 'var(--gs-text-2)' }}>{repo.description || 'No description available.'}</p>
+                        
+                        {match && match.insights && match.insights.length > 0 && (
+                          <div className="flex flex-col gap-1.5 mb-4 w-full bg-[rgba(0,0,0,0.15)] px-4 py-3 rounded-xl border border-[var(--gs-border)]">
+                            {match.insights.map((insight, idx) => (
+                              <div key={idx} className="flex items-start gap-2 text-[11px] leading-tight">
+                                {insight.type === 'positive' && <span className="text-[var(--gs-green)] inline-block">✓</span>}
+                                {insight.type === 'warning' && <span className="text-[#f59e0b] inline-block">⚠</span>}
+                                {insight.type === 'neutral' && <span className="text-gray-400 inline-block">•</span>}
+                                <span className={
+                                  insight.type === 'positive' ? 'text-[var(--gs-green)]' :
+                                  insight.type === 'warning' ? 'text-[#f59e0b]' :
+                                  'text-gray-400'
+                                }>{insight.text}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+
+                        <div className="flex items-center gap-4 text-[10px] uppercase font-mono-gs tracking-widest w-full mt-auto pt-2">
+                          <span className="text-[var(--gs-text-muted)]">★ {repo.stargazers_count > 1000 ? (repo.stargazers_count/1000).toFixed(1)+'k' : repo.stargazers_count}</span>
+                          <span className="text-[var(--gs-text-muted)]">𐄂 {repo.open_issues_count || 0} issues</span>
+                          <div className="ml-auto flex shrink-0">
+                            {!match && getFriendlinessBadge(repo)}
+                          </div>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
             ) : (
               <div className="text-center py-16 px-6 border border-dashed rounded-2xl" style={{ borderColor: 'var(--gs-border)' }}>

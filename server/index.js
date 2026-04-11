@@ -88,6 +88,61 @@ app.get('/api/me', (req, res) => {
   res.json({ username: session.username, avatarUrl: session.avatarUrl });
 });
 
+// Profile fingerprinting for match score logic
+app.get('/api/user/profile', async (req, res) => {
+  const sessionId = req.cookies?.session_id;
+  const session = sessionId ? sessions[sessionId] : null;
+  if (!session || !session.accessToken) return res.status(401).json({ error: 'Not logged in' });
+
+  try {
+    const response = await axios.get(`https://api.github.com/users/${session.username}/repos?per_page=100&sort=pushed`, {
+      headers: { Authorization: `Bearer ${session.accessToken}`, 'User-Agent': 'GitStat-App' }
+    });
+    
+    const repos = response.data;
+    const langScores = {};
+    let totalStars = 0;
+    let repoCount = 0;
+    
+    // Calculate heuristics
+    repos.forEach(repo => {
+      if (repo.language) {
+        langScores[repo.language] = (langScores[repo.language] || 0) + (repo.size || 1);
+      }
+      if (!repo.fork) {
+        totalStars += repo.stargazers_count;
+        repoCount++;
+      }
+    });
+
+    const sortedLangs = Object.entries(langScores).sort((a, b) => b[1] - a[1]).slice(0, 5);
+    const topLanguages = Object.fromEntries(sortedLangs);
+    
+    const avgStars = repoCount > 0 ? totalStars / repoCount : 0;
+    const preferredRepoSize = avgStars < 500 ? 'small' : avgStars <= 10000 ? 'medium' : 'large';
+
+    // Estimate pace using recency of top 10 repos
+    const recentRepos = repos.slice(0, 10);
+    let weeklyVol = 0;
+    recentRepos.forEach(repo => {
+      const weeks = Math.max(1, (Date.now() - new Date(repo.created_at).getTime()) / (1000 * 60 * 60 * 24 * 7));
+      weeklyVol += (repo.size / 100) / weeks; // Rough proxy for commit volume
+    });
+    const avgWeeklyCommits = weeklyVol / Math.max(1, recentRepos.length);
+    const activityLevel = avgWeeklyCommits > 10 ? 'high' : avgWeeklyCommits >= 3 ? 'medium' : 'low';
+
+    res.json({
+      topLanguages,
+      avgWeeklyCommits,
+      preferredRepoSize,
+      activityLevel
+    });
+  } catch (error) {
+    console.error('Profile fetch error:', error.message);
+    res.status(500).json({ error: 'Failed to build user profile' });
+  }
+});
+
 // Non-authenticated public badge embed route
 app.get('/badge/:owner/:repo', async (req, res) => {
   const { owner, repo } = req.params;
