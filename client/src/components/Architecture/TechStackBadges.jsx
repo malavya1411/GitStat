@@ -1,14 +1,38 @@
 import React from 'react';
 import { Activity, Box, Wrench, Key, FileText, CheckCircle } from 'lucide-react';
+import { useTheme } from '../../context/ThemeContext';
 
 function Badge({ item, delay = 0, isVisible }) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
+  // Fix visibility in light mode for light colors
+  let textColor = isVisible ? item.color : 'transparent';
+  let bgColor = isVisible ? item.bg : 'transparent';
+  let borderColor = `${item.color}${isVisible ? '99' : '00'}`;
+
+  if (isLight && isVisible) {
+    // If the text is white, use the primary text color
+    if (item.color.toLowerCase() === '#ffffff') {
+      textColor = 'var(--gs-text)';
+      bgColor = 'var(--gs-surface-high)';
+      borderColor = 'var(--gs-border)';
+    }
+    // If the text is bright yellow (JavaScript), use a darker amber version
+    else if (item.color.toLowerCase() === '#f7df1e') {
+      textColor = 'var(--gs-amber)'; // Defined as #78350f in light theme
+      bgColor = 'rgba(120, 53, 15, 0.1)';
+      borderColor = 'rgba(120, 53, 15, 0.3)';
+    }
+  }
+
   return (
     <div
       className="flex items-center gap-2 rounded-full px-3.5 py-1.5 text-[12px] font-semibold transition-all duration-500 whitespace-nowrap hover:scale-105 cursor-default select-none"
       style={{
-        background: isVisible ? item.bg : 'transparent',
-        color: isVisible ? item.color : 'transparent',
-        border: `1.5px solid ${item.color}${isVisible ? '99' : '00'}`,
+        background: bgColor,
+        color: textColor,
+        border: `1.5px solid ${borderColor}`,
         opacity: isVisible ? 1 : 0,
         transform: isVisible ? 'translateY(0)' : 'translateY(8px)',
         transitionDelay: `${delay}ms`,
@@ -25,7 +49,7 @@ function Badge({ item, delay = 0, isVisible }) {
 
 function SectionLabel({ label }) {
   return (
-    <div className="text-[9px] uppercase tracking-[0.2em] font-bold px-1 mt-5 mb-2 first:mt-0 font-mono-gs" style={{ color: '#484f58' }}>
+    <div className="text-[9px] uppercase tracking-[0.2em] font-bold px-1 mt-5 mb-2 first:mt-0 font-mono-gs" style={{ color: 'var(--gs-text-muted)' }}>
       {label}
     </div>
   );

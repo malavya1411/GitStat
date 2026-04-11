@@ -123,8 +123,8 @@ function TreeNode({ node, depth = 0, defaultOpen = false }) {
 function SmallTreeView({ treeRoot }) {
   return (
     <div className="rounded-xl p-4 overflow-auto max-h-[600px] custom-scrollbar"
-      style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)' }}>
-      <div className="text-[10px] uppercase font-bold font-mono-gs tracking-widest mb-3 px-2" style={{ color: '#484f58' }}>
+      style={{ background: 'var(--gs-surface)', border: '1px solid var(--gs-border)' }}>
+      <div className="text-[10px] uppercase font-bold font-mono-gs tracking-widest mb-3 px-2" style={{ color: 'var(--gs-text-muted)' }}>
         File Explorer
       </div>
       {treeRoot.children.map(child => (
@@ -177,7 +177,7 @@ function MediumGraphView({ treeRoot, techStack }) {
 
             {/* Expanded children */}
             {expanded.has(node.path) && node.children?.length > 0 && (
-              <div className="mt-2 rounded-xl overflow-hidden" style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)' }}>
+              <div className="mt-2 rounded-xl overflow-hidden" style={{ background: 'var(--gs-surface)', border: '1px solid var(--gs-border)' }}>
                 {node.children.slice(0, 20).map(child => {
                   const ico = getFileIcon(child.extension);
                   return (
@@ -190,7 +190,7 @@ function MediumGraphView({ treeRoot, techStack }) {
                   );
                 })}
                 {node.children.length > 20 && (
-                  <div className="px-3 py-2 text-[11px] font-mono-gs" style={{ color: '#484f58' }}>
+                  <div className="px-3 py-2 text-[11px] font-mono-gs" style={{ color: 'var(--gs-text-muted)' }}>
                     +{node.children.length - 20} more files...
                   </div>
                 )}
@@ -306,7 +306,7 @@ function LargeArchMap({ treeRoot, techStack }) {
             <span className="font-bold text-[14px]" style={{ color: selected.color, fontFamily: "'Geist Sans', sans-serif" }}>
               {selected.label}
             </span>
-            <span className="font-mono-gs text-[11px] ml-auto" style={{ color: '#484f58' }}>
+            <span className="font-mono-gs text-[11px] ml-auto" style={{ color: 'var(--gs-text-muted)' }}>
               Click any cluster above to explore
             </span>
           </div>

@@ -34,10 +34,10 @@ function CodeBlock({ code, language = 'bash' }) {
   };
 
   return (
-    <div className="relative group/code rounded-xl overflow-hidden mt-3" style={{ background: '#0d1117', border: '1px solid rgba(255,255,255,0.06)' }}>
+    <div className="relative group/code rounded-xl overflow-hidden mt-3" style={{ background: 'var(--gs-surface-high)', border: '1px solid var(--gs-border)' }}>
       {/* Top bar */}
-      <div className="flex items-center justify-between px-4 py-2" style={{ background: 'rgba(255,255,255,0.03)', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-        <span className="font-mono-gs text-[10px] uppercase tracking-widest" style={{ color: '#484f58' }}>{language}</span>
+      <div className="flex items-center justify-between px-4 py-2" style={{ background: 'rgba(0,0,0,0.1)', borderBottom: '1px solid var(--gs-border)' }}>
+        <span className="font-mono-gs text-[10px] uppercase tracking-widest" style={{ color: 'var(--gs-text-muted)' }}>{language}</span>
         <button
           onClick={handleCopy}
           className="flex items-center gap-1.5 rounded-md px-2.5 py-1 text-[11px] font-mono-gs transition-all active:scale-95"
@@ -52,7 +52,7 @@ function CodeBlock({ code, language = 'bash' }) {
         </button>
       </div>
       {/* Code */}
-      <pre className="p-4 m-0 text-[13px] leading-relaxed overflow-x-auto font-mono-gs" style={{ color: '#e6edf3' }}>
+      <pre className="p-4 m-0 text-[13px] leading-relaxed overflow-x-auto font-mono-gs" style={{ color: 'var(--gs-text)' }}>
         <code>{code}</code>
       </pre>
     </div>
@@ -131,7 +131,7 @@ export default function SetupStep({ step, index, isVisible }) {
           {/* Env vars */}
           {step.envVars && step.envVars.length > 0 && (
             <div className="mt-4 space-y-2">
-              <div className="text-[11px] font-mono-gs uppercase tracking-widest mb-2" style={{ color: '#484f58' }}>
+              <div className="text-[11px] font-mono-gs uppercase tracking-widest mb-2" style={{ color: 'var(--gs-text-muted)' }}>
                 Required Variables
               </div>
               {step.envVars.map(v => (
