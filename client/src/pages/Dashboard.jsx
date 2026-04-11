@@ -22,8 +22,8 @@ const MoonIcon = () => (
 
 const TRENDING_REPOS = [
   { full_name: 'tensorflow/tensorflow', language: 'Python', stars: '176k', forks: '88k', desc: 'An open source machine learning framework for everyone.' },
+  { full_name: 'microsoft/vscode', language: 'TypeScript', stars: '148k', forks: '26k', desc: 'Visual Studio Code.' },
   { full_name: 'freeCodeCamp/freeCodeCamp', language: 'TypeScript', stars: '386k', forks: '35k', desc: 'freeCodeCamp.org\'s open-source codebase and curriculum.' },
-  { full_name: 'vuejs/vue', language: 'JavaScript', stars: '204k', forks: '33k', desc: 'Vue.js is a progressive, incrementally-adoptable JavaScript framework...' },
   { full_name: 'facebook/react', language: 'JavaScript', stars: '210k', forks: '44k', desc: 'A declarative, efficient, and flexible JavaScript library for building user interfaces.' },
 ];
 
