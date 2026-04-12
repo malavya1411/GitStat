@@ -23,8 +23,7 @@ export const AuthProvider = ({ children }) => {
     const interceptorId = axios.interceptors.request.use(config => {
       const token = localStorage.getItem('gitstat_token');
       if (token) {
-        config.headers = config.headers || {};
-        config.headers.Authorization = `Bearer ${token}`;
+        config.headers.set('Authorization', `Bearer ${token}`);
       }
       return config;
     });
