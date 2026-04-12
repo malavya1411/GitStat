@@ -1,19 +1,22 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001'
 
-export async function apiFetch(path, options = {}) {
-  console.log('API_URL:', API_URL);
-  const token = localStorage.getItem('gitstat_token');
-  const headers = { ...(options.headers || {}) };
+export const getToken = () => localStorage.getItem('gitstat_token')
 
-  if (token) {
-    headers['Authorization'] = `Bearer ${token}`;
-  }
-
+export const apiFetch = async (path, options = {}) => {
+  const token = getToken()
   const response = await fetch(`${API_URL}${path}`, {
     ...options,
     credentials: 'include',
-    headers,
-  });
-
-  return response;
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {}),
+      ...(options.headers || {})
+    }
+  })
+  if (response.status === 401) {
+    localStorage.removeItem('gitstat_token')
+    window.location.href = '/'
+    return null
+  }
+  return response
 }

@@ -1,33 +1,31 @@
-const { sessions, getSessionIdFromRequest } = require('../utils/sessions');
+const { sessions } = require('../utils/sessions');
 
 const requireAuth = (req, res, next) => {
-  const sessionId = getSessionIdFromRequest(req);
+  let token = null;
 
-  if (!sessionId) {
-    return res.status(401).json({ 
-      error: 'Unauthorized', 
-      message: 'Please sign in with GitHub to continue' 
-    });
+  const authHeader = req.headers['authorization'];
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    token = authHeader.slice(7).trim();
   }
-  
-  const session = sessions[sessionId];
-  
+
+  if (!token && req.cookies?.session_id) {
+    token = req.cookies.session_id;
+  }
+
+  if (!token) {
+    return res.status(401).json({ error: 'Unauthorized', message: 'Please sign in' });
+  }
+
+  const session = sessions[token];
   if (!session) {
     res.clearCookie('session_id');
-    return res.status(401).json({ 
-      error: 'Session expired', 
-      message: 'Your session has expired. Please sign in again.' 
-    });
+    return res.status(401).json({ error: 'Session expired', message: 'Please sign in again' });
   }
-  
-  // Update last accessed timestamp
+
   session.lastAccessed = Date.now();
-  
-  // Attach session data to request for use in route handlers
   req.session = session;
   req.accessToken = session.accessToken;
   req.username = session.username;
-  
   next();
 };
 
