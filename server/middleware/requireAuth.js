@@ -1,4 +1,4 @@
-const { sessions } = require('../utils/sessions');
+const { getSession } = require('../utils/sessions');
 
 const requireAuth = (req, res, next) => {
   let token = null;
@@ -16,7 +16,7 @@ const requireAuth = (req, res, next) => {
     return res.status(401).json({ error: 'Unauthorized', message: 'Please sign in' });
   }
 
-  const session = sessions[token];
+  const session = getSession(token);
   if (!session) {
     res.clearCookie('session_id');
     return res.status(401).json({ error: 'Session expired', message: 'Please sign in again' });
