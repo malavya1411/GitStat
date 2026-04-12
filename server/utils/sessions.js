@@ -1,9 +1,26 @@
 // In-memory session store
-const sessions = {};
+const sessions = Object.create(null); // null prototype prevents prototype-pollution
 
 // Session cleanup interval — runs every 30 minutes, expires sessions older than 1 hour
 const SESSION_MAX_AGE_MS = 60 * 60 * 1000;       // 1 hour
 const SESSION_CLEANUP_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
+
+// Validates session ID format: 64-character lowercase hex string
+const SESSION_ID_RE = /^[0-9a-f]{64}$/;
+
+const isValidSessionId = (id) => typeof id === 'string' && SESSION_ID_RE.test(id);
+
+// Extract and validate a session ID from a request (Bearer header first, then cookie)
+const getSessionIdFromRequest = (req) => {
+  const authHeader = req.headers && req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.slice(7);
+    if (isValidSessionId(token)) return token;
+  }
+  const cookieId = req.cookies && req.cookies.session_id;
+  if (isValidSessionId(cookieId)) return cookieId;
+  return null;
+};
 
 const startSessionCleanup = () => {
   setInterval(() => {
@@ -16,4 +33,4 @@ const startSessionCleanup = () => {
   }, SESSION_CLEANUP_INTERVAL_MS);
 };
 
-module.exports = { sessions, startSessionCleanup, SESSION_MAX_AGE_MS };
+module.exports = { sessions, startSessionCleanup, SESSION_MAX_AGE_MS, getSessionIdFromRequest };

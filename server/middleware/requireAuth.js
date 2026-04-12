@@ -1,17 +1,7 @@
-const { sessions } = require('../utils/sessions');
+const { sessions, getSessionIdFromRequest } = require('../utils/sessions');
 
 const requireAuth = (req, res, next) => {
-  // Check Authorization header first (Bearer token), then fall back to cookie
-  let sessionId = null;
-
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    sessionId = authHeader.slice(7);
-  }
-
-  if (!sessionId) {
-    sessionId = req.cookies?.session_id;
-  }
+  const sessionId = getSessionIdFromRequest(req);
 
   if (!sessionId) {
     return res.status(401).json({ 

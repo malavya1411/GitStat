@@ -9,8 +9,10 @@ export default function AuthSuccess() {
     const token = searchParams.get('token');
     if (token) {
       localStorage.setItem('gitstat_token', token);
+      navigate('/dashboard', { replace: true });
+    } else {
+      navigate('/', { replace: true });
     }
-    navigate('/dashboard', { replace: true });
   }, [searchParams, navigate]);
 
   return (
