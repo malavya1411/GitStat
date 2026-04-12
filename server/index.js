@@ -7,7 +7,7 @@ dotenv.config();
 
 const { globalLimiter, analysisLimiter, authLimiter } = require('./middleware/rateLimiter');
 const { validateRepoParams } = require('./utils/validate');
-const { startSessionCleanup, sessions, getSessions, getSession, getSessionIdFromRequest } = require('./utils/sessions');
+const { startSessionCleanup, getSessions, getSession, getSessionIdFromRequest } = require('./utils/sessions');
 
 const authRoutes = require('./routes/auth');
 const aiRoutes = require('./routes/ai');
@@ -97,7 +97,7 @@ app.get('/debug/session', (req, res) => {
 // Get current user (public, checks session via Bearer token or cookie)
 app.get('/api/me', (req, res) => {
   const sessionId = getSessionIdFromRequest(req);
-  const session = sessionId ? sessions[sessionId] : null;
+  const session = sessionId ? getSession(sessionId) : null;
   if (!session) return res.status(401).json({ error: 'Not logged in' });
   res.json({ username: session.username, avatarUrl: session.avatarUrl });
 });
@@ -105,7 +105,7 @@ app.get('/api/me', (req, res) => {
 // Profile fingerprinting for match score logic
 app.get('/api/user/profile', async (req, res) => {
   const sessionId = getSessionIdFromRequest(req);
-  const session = sessionId ? sessions[sessionId] : null;
+  const session = sessionId ? getSession(sessionId) : null;
   if (!session || !session.accessToken) return res.status(401).json({ error: 'Not logged in' });
 
   try {

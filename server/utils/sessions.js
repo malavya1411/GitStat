@@ -22,8 +22,8 @@ const getSessionIdFromRequest = (req) => {
   return null;
 };
 
-// Returns reference to the shared sessions map (useful for diagnostics)
-const getSessions = () => sessions;
+// Returns a shallow copy of the sessions map (useful for diagnostics, read-only)
+const getSessions = () => ({ ...sessions });
 
 // Create or overwrite a session entry
 const createSession = (sessionId, data) => {
