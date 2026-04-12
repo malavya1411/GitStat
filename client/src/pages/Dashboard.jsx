@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useTheme } from '../context/ThemeContext';
 import { computeMatchScore } from '../utils/matchScore';
-
-const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:5001';
+import { apiFetch } from '../utils/api';
 
 const SunIcon = () => (
   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-4 h-4">
@@ -160,8 +158,9 @@ const Dashboard = () => {
 
   useEffect(() => {
     if (user) {
-      axios.get(`${API_BASE_URL}/api/user/profile`, { withCredentials: true })
-        .then(res => setUserProfile(res.data))
+      apiFetch('/api/user/profile')
+        .then(res => res.json())
+        .then(data => setUserProfile(data))
         .catch(err => console.log('Profile fetch err', err));
     }
   }, [user]);
@@ -198,8 +197,9 @@ const Dashboard = () => {
         setSearchResults([]);
         return;
       }
-      const response = await axios.get(`${API_BASE_URL}/api/search-repos?q=${encodeURIComponent(finalQuery)}`);
-      setSearchResults(response.data || []);
+      const response = await apiFetch(`/api/search-repos?q=${encodeURIComponent(finalQuery)}`);
+      const data = await response.json();
+      setSearchResults(data || []);
     } catch (error) {
       console.error('Search error:', error);
     } finally {
@@ -217,8 +217,9 @@ const Dashboard = () => {
     setShowMobileFilters(false);
     try {
       const pQuery = buildPersonalisedQuery(userProfile);
-      const response = await axios.get(`${API_BASE_URL}/api/search-repos?q=${encodeURIComponent(pQuery)}`);
-      setSearchResults(response.data || []);
+      const response = await apiFetch(`/api/search-repos?q=${encodeURIComponent(pQuery)}`);
+      const data = await response.json();
+      setSearchResults(data || []);
     } catch (error) {
       console.error('Personalised Search error:', error);
     } finally {
