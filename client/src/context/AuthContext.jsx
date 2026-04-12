@@ -11,13 +11,20 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Configure axios to always send and receive cookies from backend
+  // Configure axios to always send cookies for local dev
   axios.defaults.withCredentials = true;
+
+  const getAuthHeaders = () => {
+    const token = localStorage.getItem('gitstat_token');
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   const checkAuth = async () => {
     try {
       setLoading(true);
-      const response = await axios.get(`${API_BASE_URL}/api/me`);
+      const response = await axios.get(`${API_BASE_URL}/api/me`, {
+        headers: getAuthHeaders(),
+      });
       setUser(response.data);
     } catch (error) {
       setUser(null);
@@ -37,6 +44,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = () => {
+    localStorage.removeItem('gitstat_token');
     // Backend logout route clears the cookie
     window.location.href = `${API_BASE_URL}/auth/logout`;
   };
