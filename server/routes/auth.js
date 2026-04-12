@@ -1,7 +1,7 @@
 const express = require('express');
 const axios = require('axios');
 const crypto = require('crypto');
-const { sessions, SESSION_MAX_AGE_MS } = require('../utils/sessions');
+const { createSession, deleteSession } = require('../utils/sessions');
 
 const router = express.Router();
 const getEnv = () => ({
@@ -43,14 +43,12 @@ router.get('/callback', async (req, res) => {
     const { login: username, avatar_url: avatarUrl } = userResponse.data;
 
     const sessionId = crypto.randomBytes(32).toString('hex');
-    sessions[sessionId] = {
+    createSession(sessionId, {
       accessToken,
       username,
       avatarUrl,
-      createdAt: Date.now(),
-      lastAccessed: Date.now(),
       ipAddress: req.ip,
-    };
+    });
 
     res.redirect(`${envVars.FRONTEND_URL}/auth/success?token=${sessionId}`);
   } catch (error) {
@@ -64,7 +62,7 @@ router.get('/logout', (req, res) => {
   const { FRONTEND_URL } = getEnv();
   const sessionId = req.cookies?.session_id;
   if (sessionId) {
-    delete sessions[sessionId];
+    deleteSession(sessionId);
     res.clearCookie('session_id');
   }
   res.redirect(FRONTEND_URL);

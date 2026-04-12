@@ -7,7 +7,7 @@ dotenv.config();
 
 const { globalLimiter, analysisLimiter, authLimiter } = require('./middleware/rateLimiter');
 const { validateRepoParams } = require('./utils/validate');
-const { startSessionCleanup, sessions, getSessionIdFromRequest } = require('./utils/sessions');
+const { startSessionCleanup, sessions, getSessions, getSession, getSessionIdFromRequest } = require('./utils/sessions');
 
 const authRoutes = require('./routes/auth');
 const aiRoutes = require('./routes/ai');
@@ -79,6 +79,20 @@ try {
 app.use('/auth', authRoutes);
 app.use('/api', repoRoutes);
 app.use('/api/repo', aiRoutes);
+
+// Debug route — no auth required, helps verify the session store is reachable
+app.get('/debug/session', (req, res) => {
+  const authHeader = req.headers['authorization'];
+  const token = authHeader && authHeader.startsWith('Bearer ') ? authHeader.slice(7).trim() : null;
+  const session = token ? getSession(token) : null;
+  const totalSessions = Object.keys(getSessions()).length;
+  res.json({
+    tokenReceived: !!token,
+    tokenLength: token ? token.length : 0,
+    sessionFound: !!session,
+    totalActiveSessions: totalSessions,
+  });
+});
 
 // Get current user (public, checks session via Bearer token or cookie)
 app.get('/api/me', (req, res) => {
