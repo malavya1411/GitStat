@@ -19,6 +19,18 @@ export const AuthProvider = ({ children }) => {
     return token ? { Authorization: `Bearer ${token}` } : {};
   };
 
+  useEffect(() => {
+    const interceptorId = axios.interceptors.request.use(config => {
+      const token = localStorage.getItem('gitstat_token');
+      if (token) {
+        config.headers = config.headers || {};
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+      return config;
+    });
+    return () => axios.interceptors.request.eject(interceptorId);
+  }, []);
+
   const checkAuth = async () => {
     try {
       setLoading(true);
