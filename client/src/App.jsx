@@ -12,6 +12,7 @@ import DeploymentsPage from './pages/DeploymentsPage';
 import NetworkGraphPage from './pages/NetworkGraphPage';
 import RepoComparePage from './pages/RepoComparePage';
 import DeepAnalysisPage from './pages/DeepAnalysisPage';
+import AuthSuccess from './pages/AuthSuccess';
 
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
@@ -33,6 +34,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/auth/success" element={<AuthSuccess />} />
       <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
       <Route path="/repos" element={<PrivateRoute><ReposPage /></PrivateRoute>} />
       <Route path="/repo/:owner/:repo" element={<PrivateRoute><RepoAnalysis /></PrivateRoute>} />

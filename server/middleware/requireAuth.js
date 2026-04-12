@@ -1,8 +1,8 @@
-const { sessions } = require('../utils/sessions');
+const { sessions, getSessionIdFromRequest } = require('../utils/sessions');
 
 const requireAuth = (req, res, next) => {
-  const sessionId = req.cookies?.session_id;
-  
+  const sessionId = getSessionIdFromRequest(req);
+
   if (!sessionId) {
     return res.status(401).json({ 
       error: 'Unauthorized', 

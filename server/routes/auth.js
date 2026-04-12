@@ -52,14 +52,7 @@ router.get('/callback', async (req, res) => {
       ipAddress: req.ip,
     };
 
-    res.cookie('session_id', sessionId, {
-      httpOnly: true,
-      secure: true,
-      sameSite: 'none',
-      maxAge: SESSION_MAX_AGE_MS,
-    });
-
-    res.redirect(`${envVars.FRONTEND_URL}/dashboard`);
+    res.redirect(`${envVars.FRONTEND_URL}/auth/success?token=${sessionId}`);
   } catch (error) {
     console.error('OAuth Error:', error.response?.data || error.message);
     res.status(500).send(`Authentication failed: ${error.message} -- ${error.response?.data ? JSON.stringify(error.response.data) : ''}`);
