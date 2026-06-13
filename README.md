@@ -1,9 +1,6 @@
 <p align="center">
   <img src="assets/Logo.png" alt="GitStat Logo" width="300" />
 </p>
-
-<h1 align="center">GitStat</h1>
-
 <p align="center">
   <strong>Understand who's building. Before they disappear.</strong>
 </p>
