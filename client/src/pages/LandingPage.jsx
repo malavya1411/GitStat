@@ -227,8 +227,6 @@ const LandingPage = () => {
     }
   }, [user, loading, navigate]);
 
-  if (loading) return null;
-
   return (
     <div className="relative h-screen overflow-hidden bg-[#071016] text-[#edf3ee] selection:bg-[#63ff95]/30">
       <div className="pointer-events-none absolute inset-0">

@@ -14,6 +14,8 @@ import RepoComparePage from './pages/RepoComparePage';
 import DeepAnalysisPage from './pages/DeepAnalysisPage';
 import AuthSuccess from './pages/AuthSuccess';
 
+import LoadingScreen from './components/LoadingScreen';
+
 const PrivateRoute = ({ children }) => {
   const { user, loading } = useAuth();
   if (loading) return (
@@ -48,12 +50,20 @@ function AppRoutes() {
   );
 }
 
+function MainAppContent() {
+  const { loading } = useAuth();
+  if (loading) {
+    return <LoadingScreen />;
+  }
+  return <AppRoutes />;
+}
+
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
         <div className="min-h-screen" style={{ fontFamily: "'Geist Sans', system-ui, sans-serif", background: 'var(--gs-bg)', color: 'var(--gs-text)' }}>
-          <AppRoutes />
+          <MainAppContent />
         </div>
       </AuthProvider>
     </ThemeProvider>
