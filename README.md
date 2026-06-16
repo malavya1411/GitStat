@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  An open-source GitHub contributor health dashboard that surfaces burnout signals, knowledge concentration risks, and contribution patterns — across any public or private repository, in real time, powered by the GitHub REST API and Google Gemini AI.
+  An open-source GitHub contributor health dashboard that surfaces burnout signals, knowledge concentration risks, and contribution patterns across any public or private repository, in real time, powered by the GitHub REST API and Google Gemini AI.
 </p>
 
 <p align="center">
