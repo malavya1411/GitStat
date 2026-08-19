@@ -119,6 +119,8 @@ router.get('/repo/:owner/:repo/analyze', requireAuth, async (req, res, next) => 
 
     const results = [];
     for (let cont of topContributors) {
+      // Skip bot/deleted accounts where GitHub returns author: null
+      if (!cont.author?.login) continue;
       const weeks = Math.max(0, cont.weeks.length - 12);
       const last12 = cont.weeks.slice(weeks);
 
@@ -158,7 +160,7 @@ router.get('/repo/:owner/:repo/analyze', requireAuth, async (req, res, next) => 
       let prs_opened = 0;
       let prs_merged = 0;
       for (let pr of pulls) {
-        if (pr.user.login === cont.author.login) {
+        if (pr.user?.login === cont.author.login) {
           prs_opened++;
           if (pr.merged_at) prs_merged++;
         }

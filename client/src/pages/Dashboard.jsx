@@ -232,7 +232,13 @@ const Dashboard = () => {
     setIsPersonalisedSearch(false);
     if (query.trim() || activeFilters.length > 0) {
       if (query.includes('/') && activeFilters.length === 0) {
-        navigate(`/repo/${query.trim()}/overview`);
+        // Strip full GitHub URLs (e.g. https://github.com/owner/repo) down to owner/repo
+        let repoPath = query.trim();
+        const githubUrlMatch = repoPath.match(/github\.com\/([^/]+\/[^/]+?)(?:\.git)?(?:\/.*)?$/);
+        if (githubUrlMatch) {
+          repoPath = githubUrlMatch[1];
+        }
+        navigate(`/repo/${repoPath}/overview`);
       } else {
         performSearch();
       }
