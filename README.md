@@ -43,7 +43,7 @@
 
 Engineering teams bleed contributors silently. A developer's commit velocity drops, their streak breaks, they start pushing at 2 AM — and by the time anyone notices, they've already mentally checked out. Existing GitHub analytics tools report history. GitStat predicts what comes next.
 
-Open source maintainers have no early warning system. They discover burnout after the fact, in the form of a quiet fork or an unmaintained dependency. For engineering leads inside organisations, the same blindspot costs months of onboarding when a load-bearing contributor leaves.
+Open source maintainers have no early warning system. They discover burnout after the fact, in the form of a quiet fork or an unmaintained dependency. For engineering leads inside organisations, the same blindspot costs months of onboarding when a load bearing contributor leaves.
 
 **GitStat** connects directly to the GitHub API, computes a composite health score for every active contributor, runs linear regression burnout forecasts, and surfaces knowledge concentration risks all without requiring any code changes or integrations in the target repository. Analyse any public repo unauthenticated, or unlock private repos via GitHub OAuth.
 
