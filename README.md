@@ -41,7 +41,7 @@
 
 ## 🌌 Introduction & Problem Statement
 
-Engineering teams bleed contributors silently. A developer's commit velocity drops, their streak breaks, they start pushing at 2 AM — and by the time anyone notices, they've already mentally checked out. Existing GitHub analytics tools report history. GitStat predicts what comes next.
+Engineering teams bleed contributors silently. A developer's commit velocity drops, their streak breaks, they start pushing at 2 AM and by the time anyone notices, they've already mentally checked out. Existing GitHub analytics tools report history. GitStat predicts what comes next.
 
 Open source maintainers have no early warning system. They discover burnout after the fact, in the form of a quiet fork or an unmaintained dependency. For engineering leads inside organisations, the same blindspot costs months of onboarding when a load bearing contributor leaves.
 
@@ -52,7 +52,7 @@ Open source maintainers have no early warning system. They discover burnout afte
 ## 🚀 Key Features
 
 ### Contributor Health Scoring
-Every contributor receives a composite **Health Score (0–100)** calculated from five weighted signals: commit velocity, activity streak consistency, PR follow-through rate, response latency on pull requests, and an inverse off-hours ratio that acts as a burnout signal. Contributors are classified into four health bands: **At Risk · Stressed · Healthy · Thriving**.
+Every contributor receives a composite **Health Score (0–100)** calculated from five weighted signals: commit velocity, activity streak consistency, PR follow-through rate, response latency on pull requests, and an inverse off hours ratio that acts as a burnout signal. Contributors are classified into four health bands: **At Risk · Stressed · Healthy · Thriving**.
 
 ---
 
