@@ -159,6 +159,10 @@ app.get('/api/user/profile', async (req, res) => {
 
 // Non-authenticated public badge embed route
 app.get('/badge/:owner/:repo', async (req, res) => {
+  // Badges are public SVGs intended to be embedded by GitHub and other sites.
+  // Helmet's default same-origin policy otherwise blocks cross-site <img> use.
+  res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+
   const { owner, repo } = req.params;
   const paramCheck = validateRepoParams(owner, repo);
   if (!paramCheck.valid) return res.status(400).json({ error: paramCheck.message });
